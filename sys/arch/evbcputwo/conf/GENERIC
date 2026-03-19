@@ -1,0 +1,35 @@
+#	$NetBSD$
+#
+#	GENERIC kernel configuration for CPUTwo QEMU board
+#
+
+include "arch/evbcputwo/conf/std.evbcputwo"
+
+maxusers	32
+
+# Standard system options
+options		DDB			# in-kernel debugger
+#options	DDB_HISTORY_SIZE=512	# enable history editing
+options		DIAGNOSTIC		# internal consistency checks
+#options	DEBUG			# expensive debugging checks/support
+
+# File systems
+file-system	FFS			# UFS
+file-system	MFS			# memory file system
+file-system	NFS			# Network File System client
+file-system	KERNFS			# /kern
+file-system	PROCFS			# /proc
+
+# Networking
+options		INET			# IP + ICMP + TCP + UDP
+
+# Kernel root -- use memory disk for initial bring-up
+config		netbsd	root on md0a type ffs
+options		MEMORY_DISK_HOOKS
+options		MEMORY_DISK_IS_ROOT
+options		MEMORY_DISK_ROOT_SIZE=4096	# 2MB ramdisk
+
+# Devices
+mainbus0	at root
+cpu0		at mainbus?
+com0		at mainbus? addr 0x03F00000

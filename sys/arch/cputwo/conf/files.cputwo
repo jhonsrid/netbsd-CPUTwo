@@ -1,0 +1,17 @@
+#	$NetBSD$
+
+# CPUTwo architecture base files
+
+defparam opt_cputwo.h			KERNEL_BASE_PHYS KERNEL_BASE_VIRT
+
+file	arch/cputwo/cputwo/locore.S
+file	arch/cputwo/cputwo/trap.c
+file	arch/cputwo/cputwo/pmap.c
+file	arch/cputwo/cputwo/machdep.c
+file	arch/cputwo/cputwo/vm_machdep.c
+file	arch/cputwo/cputwo/syscall.c
+file	arch/cputwo/cputwo/intr.c
+file	arch/cputwo/cputwo/clock.c
+file	arch/cputwo/cputwo/copy.c
+file	arch/cputwo/cputwo/sig_machdep.c
+file	arch/cputwo/cputwo/bus_space.c

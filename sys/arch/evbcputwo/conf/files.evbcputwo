@@ -1,0 +1,22 @@
+#	$NetBSD$
+
+# CPUTwo evaluation board (QEMU) specific files
+
+file	arch/evbcputwo/evbcputwo/machdep.c
+file	arch/evbcputwo/evbcputwo/autoconf.c
+
+# The autoconfiguration root
+device	mainbus { [addr = -1] }
+attach	mainbus at root
+file	arch/evbcputwo/evbcputwo/mainbus.c	mainbus
+
+device	cpu
+attach	cpu at mainbus
+file	arch/evbcputwo/evbcputwo/cpu.c		cpu
+
+# UART console
+attach	com at mainbus with com_mainbus
+file	arch/evbcputwo/evbcputwo/com_mainbus.c	com_mainbus
+
+# Memory Disk (for ramdisk root)
+file	dev/md_root.c				memory_disk_hooks
