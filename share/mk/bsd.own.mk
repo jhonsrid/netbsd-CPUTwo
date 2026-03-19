@@ -62,6 +62,10 @@ NEED_OWN_INSTALL_TARGET?=	yes
 # TOOLCHAIN_MISSING?=	yes
 # .endif
 
+.if ${MACHINE_ARCH} == "cputwo"
+TOOLCHAIN_MISSING?=	yes
+.endif
+
 TOOLCHAIN_MISSING?=	no
 
 #

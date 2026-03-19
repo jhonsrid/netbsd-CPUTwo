@@ -1247,6 +1247,7 @@ case $cpu-$vendor in
 			| nfp \
 			| nios | nios2 | nios2eb | nios2el \
 			| none | np1 | ns16k | ns32k | nvptx \
+			| cputwo \
 			| open8 \
 			| or1k* \
 			| or32 \

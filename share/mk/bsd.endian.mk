@@ -7,6 +7,7 @@ _BSD_ENDIAN_MK_=1
 
 .if (!empty(MACHINE_ARCH:Maarch64*) && empty(MACHINE_ARCH:Maarch64eb)) || \
     ${MACHINE_ARCH} == "alpha" || \
+    ${MACHINE_ARCH} == "cputwo" || \
     ${MACHINE_ARCH} == "arm" || \
     (!empty(MACHINE_ARCH:Mearm*) && empty(MACHINE_ARCH:Mearm*eb)) || \
     ${MACHINE_ARCH} == "i386" || \

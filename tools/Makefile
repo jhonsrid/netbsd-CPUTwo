@@ -52,7 +52,7 @@ TOOLCHAIN_BITS+= pcc
 . endif
 .endif
 
-.if ${TOOLCHAIN_MISSING} == "no" || defined(EXTERNAL_TOOLCHAIN)
+.if ${TOOLCHAIN_MISSING} == "no"
 TOOLCHAIN_BITS+= dbsym mdsetimage
 .endif
 
