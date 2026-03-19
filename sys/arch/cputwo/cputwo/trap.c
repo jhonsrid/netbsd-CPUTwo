@@ -29,14 +29,162 @@ __KERNEL_RCSID(0, "$NetBSD$");
 
 #include <sys/param.h>
 #include <sys/systm.h>
+#include <sys/proc.h>
+#include <sys/signal.h>
+#include <sys/signalvar.h>
+#include <sys/kernel.h>
 
+#include <uvm/uvm_extern.h>
+
+#include <machine/cpu.h>
 #include <machine/frame.h>
 #include <machine/trap.h>
+#include <machine/pcb.h>
+#include <machine/pmap.h>
 
+/*
+ * IC registers for interrupt dispatch.
+ */
+#define IC_PENDING	(*(volatile uint32_t *)0x03F02000)
+#define IC_ACK		(*(volatile uint32_t *)0x03F02008)
+#define IC_TIMER	0x01
+#define IC_UART_RX	0x02
+#define IC_UART_TX	0x04
+#define IC_BLKDEV	0x08
+
+/*
+ * BADADDR supervisor register (read page fault address).
+ */
+#define SREG_BADADDR	(*(volatile uint32_t *)0x03FFF01C)
+
+/* From clock.c */
+extern void cputwo_clockintr(struct clockframe *);
+/* From cputwo_ic.c */
+extern uint32_t cputwo_ic_pending(void);
+extern void cputwo_ic_ack(uint32_t);
+/* From cputwo_uart.c */
+extern void cputwo_uart_intr(void);
+/* From cputwo_blk.c */
+extern void cputwo_blk_intr(void);
+
+/*
+ * Handle hardware interrupts (cause 0x06).
+ * Read IC pending register, dispatch to appropriate handler.
+ */
+static void
+cputwo_interrupt(struct trapframe *tf)
+{
+	struct cpu_info *ci = curcpu();
+	uint32_t pending;
+
+	ci->ci_intr_depth++;
+
+	pending = cputwo_ic_pending();
+
+	if (pending & IC_TIMER) {
+		struct clockframe cf;
+
+		cf.cf_pc = tf->tf_pc;
+		cf.cf_sr = tf->tf_status;
+		cf.cf_intr_depth = ci->ci_intr_depth;
+		cputwo_clockintr(&cf);
+	}
+
+	if (pending & (IC_UART_RX | IC_UART_TX)) {
+		cputwo_uart_intr();
+		cputwo_ic_ack(pending & (IC_UART_RX | IC_UART_TX));
+	}
+
+	if (pending & IC_BLKDEV) {
+		cputwo_blk_intr();
+		cputwo_ic_ack(IC_BLKDEV);
+	}
+
+	ci->ci_intr_depth--;
+}
+
+/*
+ * trap: main trap handler.
+ *
+ * Called from exception_entry in locore.S with a trapframe on the stack.
+ * Dispatches based on tf_cause:
+ *   - Hardware interrupt (0x06) → cputwo_interrupt()
+ *   - Syscall (0x03) → syscall()
+ *   - Page faults (0x07-0x09) → uvm_fault()
+ *   - Everything else → panic or signal
+ */
 void
 trap(struct trapframe *tf)
 {
+	uint32_t cause = tf->tf_cause;
+	int user = (tf->tf_status & 0x01) == 0;	/* bit0=0 is user mode */
 
-	panic("trap not implemented: cause=%u pc=%#x",
-	    tf->tf_cause, tf->tf_pc);
+	switch (cause) {
+	case T_HWINT:
+		cputwo_interrupt(tf);
+		return;
+
+	case T_SYSCALL:
+		/* TODO: syscall dispatch */
+		panic("trap: syscall not implemented, pc=%#x", tf->tf_pc);
+		break;
+
+	case T_IFAULT:
+	case T_LFAULT:
+	case T_SFAULT: {
+		vaddr_t va = (vaddr_t)SREG_BADADDR;
+		vm_prot_t ftype;
+		int rv;
+
+		if (cause == T_SFAULT)
+			ftype = VM_PROT_WRITE;
+		else if (cause == T_IFAULT)
+			ftype = VM_PROT_EXECUTE;
+		else
+			ftype = VM_PROT_READ;
+
+		struct proc *p = curproc;
+		struct pmap *pmap;
+
+		if (user && p != NULL)
+			pmap = p->p_vmspace->vm_map.pmap;
+		else
+			pmap = pmap_kernel();
+
+		rv = uvm_fault(&p->p_vmspace->vm_map, trunc_page(va), ftype);
+		if (rv == 0)
+			return;
+
+		if (user) {
+			/* Send SIGSEGV to the process */
+			/* TODO: proper signal delivery */
+			panic("trap: user page fault va=%#lx pc=%#x",
+			    (unsigned long)va, tf->tf_pc);
+		}
+
+		/* Kernel page fault — check onfault handler */
+		struct pcb *pcb = lwp_getpcb(curlwp);
+		if (pcb->pcb_onfault != NULL) {
+			tf->tf_pc = (uint32_t)(uintptr_t)pcb->pcb_onfault;
+			return;
+		}
+
+		panic("trap: kernel page fault va=%#lx pc=%#x cause=%u",
+		    (unsigned long)va, tf->tf_pc, cause);
+		break;
+	}
+
+	case T_ILLEGAL:
+	case T_MISALIGN:
+	case T_BUSERR:
+	case T_DIVZERO:
+	default:
+		if (user) {
+			panic("trap: user fault cause=%u pc=%#x",
+			    cause, tf->tf_pc);
+		}
+		panic("trap: kernel fault cause=%u pc=%#x",
+		    cause, tf->tf_pc);
+		break;
+	}
 }

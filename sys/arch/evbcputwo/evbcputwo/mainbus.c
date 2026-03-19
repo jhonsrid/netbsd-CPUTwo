@@ -24,6 +24,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Mainbus driver for evbcputwo.
+ * Enumerates known on-board devices via a static device table.
+ */
+
 #include <sys/cdefs.h>
 __KERNEL_RCSID(0, "$NetBSD$");
 
@@ -31,20 +36,51 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/systm.h>
 #include <sys/device.h>
 
+#include "locators.h"
+
+/*
+ * Attach arguments passed from mainbus to child devices.
+ */
+struct mainbus_attach_args {
+	const char	*ma_name;	/* device name */
+	bus_addr_t	 ma_addr;	/* device base address */
+	int		 ma_irq;	/* interrupt number, or -1 */
+};
+
+/*
+ * Static table of known on-board devices.
+ */
+static const struct {
+	const char	*name;
+	bus_addr_t	 addr;
+	int		 irq;
+} mainbus_devs[] = {
+	{ "cpu",	0,		-1 },
+	{ "com",	0x03F00000,	 1 },	/* UART, IRQ 1 (uart_rx) */
+	{ NULL,		0,		 0 },
+};
+
 struct mainbus_softc {
 	device_t sc_dev;
 };
 
 static int	mainbus_match(device_t, cfdata_t, void *);
 static void	mainbus_attach(device_t, device_t, void *);
+static int	mainbus_submatch(device_t, cfdata_t, const int *, void *);
+static int	mainbus_print(void *, const char *);
 
 CFATTACH_DECL_NEW(mainbus, sizeof(struct mainbus_softc),
     mainbus_match, mainbus_attach, NULL, NULL);
+
+/* Prevent duplicate attachment. */
+static bool mainbus_found;
 
 static int
 mainbus_match(device_t parent, cfdata_t cf, void *aux)
 {
 
+	if (mainbus_found)
+		return 0;
 	return 1;
 }
 
@@ -52,10 +88,53 @@ static void
 mainbus_attach(device_t parent, device_t self, void *aux)
 {
 	struct mainbus_softc *sc = device_private(self);
+	struct mainbus_attach_args ma;
+	int i;
 
+	mainbus_found = true;
 	sc->sc_dev = self;
+
+	aprint_naive("\n");
 	aprint_normal("\n");
 
-	config_search(self, NULL,
-	    CFARGS(.search = NULL));
+	for (i = 0; mainbus_devs[i].name != NULL; i++) {
+		ma.ma_name = mainbus_devs[i].name;
+		ma.ma_addr = mainbus_devs[i].addr;
+		ma.ma_irq  = mainbus_devs[i].irq;
+		config_found(self, &ma, mainbus_print,
+		    CFARGS(.submatch = mainbus_submatch));
+	}
+}
+
+/*
+ * Submatch: check the locator address against the device table entry.
+ * If the config file specifies a particular address, it must match.
+ */
+static int
+mainbus_submatch(device_t parent, cfdata_t cf, const int *ldesc, void *aux)
+{
+	struct mainbus_attach_args *ma = aux;
+
+	if (cf->cf_loc[MAINBUSCF_ADDR] != MAINBUSCF_ADDR_DEFAULT &&
+	    cf->cf_loc[MAINBUSCF_ADDR] != (int)ma->ma_addr)
+		return 0;
+
+	return config_match(parent, cf, aux);
+}
+
+/*
+ * Print function for unattached children.
+ */
+static int
+mainbus_print(void *aux, const char *pnp)
+{
+	struct mainbus_attach_args *ma = aux;
+
+	if (pnp != NULL)
+		return QUIET;
+
+	if (ma->ma_addr != (bus_addr_t)MAINBUSCF_ADDR_DEFAULT)
+		aprint_normal(" addr 0x%lx", (unsigned long)ma->ma_addr);
+
+	return UNCONF;
 }

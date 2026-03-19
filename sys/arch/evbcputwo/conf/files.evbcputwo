@@ -23,5 +23,10 @@ file	arch/evbcputwo/evbcputwo/cpu.c		cpu
 attach	com at mainbus with com_mainbus
 file	arch/evbcputwo/evbcputwo/com_mainbus.c	com_mainbus
 
+# Board device drivers
+file	arch/evbcputwo/evbcputwo/cputwo_ic.c
+file	arch/evbcputwo/evbcputwo/cputwo_uart.c
+file	arch/evbcputwo/evbcputwo/cputwo_blk.c
+
 # Memory Disk (for ramdisk root)
 file	dev/md_root.c				memory_disk_hooks

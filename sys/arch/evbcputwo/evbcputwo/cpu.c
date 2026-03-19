@@ -24,6 +24,11 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * CPU device for evbcputwo.
+ * Attaches to mainbus and registers with the MI cpu_info infrastructure.
+ */
+
 #include <sys/cdefs.h>
 __KERNEL_RCSID(0, "$NetBSD$");
 
@@ -47,6 +52,7 @@ static int
 cpu_match(device_t parent, cfdata_t cf, void *aux)
 {
 
+	/* Only one CPU on CPUTwo. */
 	return 1;
 }
 
@@ -56,6 +62,7 @@ cpu_attach(device_t parent, device_t self, void *aux)
 	struct cpu_softc *sc = device_private(self);
 
 	sc->sc_dev = self;
+	aprint_naive("\n");
 	aprint_normal(": CPUTwo processor\n");
 
 	cpu_info_store.ci_dev = self;

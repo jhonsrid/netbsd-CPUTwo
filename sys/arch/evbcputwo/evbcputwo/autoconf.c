@@ -32,6 +32,10 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/device.h>
 #include <sys/conf.h>
 
+/*
+ * cpu_configure:
+ *	Start autoconfiguration of the system by probing the mainbus.
+ */
 void
 cpu_configure(void)
 {
@@ -40,9 +44,15 @@ cpu_configure(void)
 		panic("cpu_configure: mainbus not configured");
 }
 
+/*
+ * cpu_rootconf:
+ *	Called after autoconfiguration to set the root device.
+ *	For ramdisk-root kernels this is not needed; rootdev
+ *	is set by the md(4) pseudo-device.
+ */
 void
 cpu_rootconf(void)
 {
 
-	/* TODO: set rootdev */
+	/* Nothing to do for ramdisk root. */
 }

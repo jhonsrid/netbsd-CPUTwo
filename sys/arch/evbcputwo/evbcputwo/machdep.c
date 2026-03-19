@@ -31,23 +31,124 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/systm.h>
 #include <sys/kernel.h>
 #include <sys/device.h>
+#include <sys/lwp.h>
+#include <sys/proc.h>
+
+#include <uvm/uvm_extern.h>
 
 #include <machine/cpu.h>
+#include <machine/pmap.h>
 
 #include <dev/cons.h>
 
 /*
+ * Supervisor registers (memory-mapped, always bypass MMU).
+ */
+#define	SREG_BASE	0x03FFF000
+#define	SREG_EPC	(*(volatile uint32_t *)(SREG_BASE + 0x00))
+#define	SREG_EFLAGS	(*(volatile uint32_t *)(SREG_BASE + 0x04))
+#define	SREG_EVEC	(*(volatile uint32_t *)(SREG_BASE + 0x08))
+#define	SREG_CAUSE	(*(volatile uint32_t *)(SREG_BASE + 0x0C))
+#define	SREG_STATUS	(*(volatile uint32_t *)(SREG_BASE + 0x10))
+#define	SREG_ESTATUS	(*(volatile uint32_t *)(SREG_BASE + 0x14))
+#define	SREG_SATP	(*(volatile uint32_t *)(SREG_BASE + 0x18))
+#define	SREG_BADADDR	(*(volatile uint32_t *)(SREG_BASE + 0x1C))
+
+/*
+ * Physical memory layout:
+ *   0x00000000 - 0x03EFFFFF : RAM (63 MB)
+ *   0x03F00000 - 0x03FFFFFF : MMIO (bypasses MMU)
+ *
+ * Kernel virtual base: 0x80000000 (direct map: VA 0x80000000 = PA 0x00000000)
+ */
+#define	PHYS_RAM_END	0x03F00000	/* first byte past RAM */
+
+/* Linker-provided symbol marking end of kernel BSS */
+extern char end[];
+
+/* Exception entry point from locore.S */
+extern void exception_entry(void);
+
+/*
  * Board-level initialization for evbcputwo.
- * Called from cputwo_start.S after stack setup.
+ * Called from cputwo_start.S after stack setup, running at physical
+ * addresses with MMU off.
  */
 void
 cputwo_init(void)
 {
+	paddr_t first_free_pa;
 
+	/*
+	 * Step 1: Set up cpu_info for bootstrap CPU.
+	 * lwp0 is the initial kernel thread; it must be set as curlwp
+	 * before anything that touches per-CPU state.
+	 */
+	memset(&cpu_info_store, 0, sizeof(cpu_info_store));
+	cpu_info_store.ci_curlwp = &lwp0;
+
+	/*
+	 * Step 2: Set up exception vector table.
+	 * EVEC register holds the BASE ADDRESS of a table of 32-bit handler
+	 * addresses.  On exception with cause N, hardware loads the handler
+	 * from EVEC + (N * 4) and jumps to it.  We need at least 10 entries
+	 * (causes 0x00-0x09).  Use 16 for headroom.
+	 */
+	{
+		static uint32_t evec_table[16];
+		int i;
+
+		for (i = 0; i < 16; i++)
+			evec_table[i] = (uint32_t)(uintptr_t)exception_entry;
+		SREG_EVEC = (uint32_t)(uintptr_t)evec_table;
+	}
+
+	/*
+	 * Step 3: Early console for printf/panic.
+	 */
 	consinit();
 
-	/* TODO: set up memory regions, parse DTB, etc. */
+	printf("CPUTwo NetBSD bootstrap\n");
 
+	/*
+	 * Step 4: Compute physical memory layout.
+	 *
+	 * Total physical RAM: 0x00000000 to PHYS_RAM_END (63 MB).
+	 * Kernel occupies: 0x00000000 to end[].
+	 * Free memory: round_page(&end) to PHYS_RAM_END.
+	 */
+	physmem = atop(PHYS_RAM_END);
+
+	first_free_pa = round_page((paddr_t)(uintptr_t)end);
+
+	printf("kernel end = %p, first free PA = 0x%lx\n",
+	    end, (unsigned long)first_free_pa);
+	printf("physical memory: %lu KB (%lu pages)\n",
+	    (unsigned long)(PHYS_RAM_END / 1024),
+	    (unsigned long)physmem);
+
+	/*
+	 * Step 5: Register free physical memory with UVM.
+	 *
+	 * uvm_page_physload() takes page frame numbers.
+	 * We register the free region from end-of-kernel to end-of-RAM.
+	 * The first two args are the segment boundaries (start, end),
+	 * the second two are the available (free) range within.
+	 */
+	uvm_page_physload(atop(first_free_pa), atop(PHYS_RAM_END),
+	    atop(first_free_pa), atop(PHYS_RAM_END),
+	    VM_FREELIST_DEFAULT);
+
+	/*
+	 * Step 6: Bootstrap the pmap (kernel page tables).
+	 */
+	pmap_bootstrap();
+
+	printf("pmap_bootstrap done, calling main()\n");
+
+	/*
+	 * Step 7: Enter main kernel initialization.
+	 */
 	main();
 
 	/* NOTREACHED */
@@ -56,6 +157,11 @@ cputwo_init(void)
 
 /*
  * Early console via polled UART at 0x03F00000.
+ *
+ * UART register layout:
+ *   +0x00  STATUS  (bit 0 = TX ready, bit 1 = RX available)
+ *   +0x04  TX data
+ *   +0x08  RX data
  */
 #define UART_STATUS	(*(volatile uint32_t *)0x03F00000)
 #define UART_TX		(*(volatile uint32_t *)0x03F00004)
