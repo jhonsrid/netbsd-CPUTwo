@@ -1,0 +1,20 @@
+#	$NetBSD$
+#
+# Device majors for evbcputwo
+#
+
+device-major	cons		char 0
+device-major	ctty		char 1
+device-major	mem		char 2
+device-major	swap		char 3   block 1	vmswap
+device-major	pts		char 4			pty
+device-major	ptc		char 5			pty
+device-major	log		char 6
+device-major	com		char 26			com
+device-major	md		char 28  block 6	md
+device-major	rnd		char 39			rnd
+device-major	ksyms		char 76			ksyms
+
+# Majors up to 143 are reserved for machine-dependent drivers.
+# New machine-independent driver majors are assigned in
+# sys/conf/majors.

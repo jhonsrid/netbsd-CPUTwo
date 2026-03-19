@@ -4,7 +4,7 @@
 
 defparam opt_cputwo.h			KERNEL_BASE_PHYS KERNEL_BASE_VIRT
 
-file	arch/cputwo/cputwo/locore.S
+# locore.S is built via MD_OBJS in Makefile.cputwo, not listed here
 file	arch/cputwo/cputwo/trap.c
 file	arch/cputwo/cputwo/pmap.c
 file	arch/cputwo/cputwo/machdep.c

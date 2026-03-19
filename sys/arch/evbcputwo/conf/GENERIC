@@ -29,6 +29,11 @@ options		MEMORY_DISK_HOOKS
 options		MEMORY_DISK_IS_ROOT
 options		MEMORY_DISK_ROOT_SIZE=4096	# 2MB ramdisk
 
+# Pseudo-devices
+pseudo-device	md			# memory disk (for ramdisk root)
+pseudo-device	loop			# network loopback
+pseudo-device	pty			# pseudo-terminals
+
 # Devices
 mainbus0	at root
 cpu0		at mainbus?

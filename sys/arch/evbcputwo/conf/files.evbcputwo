@@ -1,5 +1,10 @@
 #	$NetBSD$
 
+# maxpartitions must be the first item in files.${ARCH}
+maxpartitions 16
+
+include "arch/evbcputwo/conf/majors.evbcputwo"
+
 # CPUTwo evaluation board (QEMU) specific files
 
 file	arch/evbcputwo/evbcputwo/machdep.c

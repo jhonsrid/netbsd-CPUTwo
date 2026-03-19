@@ -9,5 +9,5 @@ makeoptions	DEFTEXTADDR="0x80000000"
 makeoptions	BOARDTYPE="evbcputwo"
 makeoptions	BOARDMKFRAG="${CPUTWO}/conf/mk.evbcputwo"
 
-include "arch/cputwo/conf/files.cputwo"
-include "arch/evbcputwo/conf/files.evbcputwo"
+# files.evbcputwo is auto-included by config(8) from "machine evbcputwo"
+# files.cputwo is auto-included by config(8) from "machine ... cputwo"

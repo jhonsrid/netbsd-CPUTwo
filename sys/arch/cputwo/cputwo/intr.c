@@ -1,0 +1,103 @@
+/*
+ * Copyright (c) 2024 The NetBSD Foundation, Inc.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include <sys/cdefs.h>
+__KERNEL_RCSID(0, "$NetBSD$");
+
+#include <sys/param.h>
+#include <sys/systm.h>
+
+#include <machine/cpu.h>
+#include <machine/intr.h>
+
+/*
+ * Supervisor STATUS register is memory-mapped at 0x03FFF010.
+ * Bit 1 = IE (interrupt enable).
+ */
+#define CPUTWO_STATUS	(*(volatile uint32_t *)0x03FFF010)
+
+static inline uint32_t
+disable_interrupts(void)
+{
+	uint32_t old = CPUTWO_STATUS;
+	CPUTWO_STATUS = old & ~0x2;	/* clear IE */
+	return old;
+}
+
+static inline void
+restore_interrupts(uint32_t saved)
+{
+	CPUTWO_STATUS = saved;
+}
+
+int
+_splraise(int ipl)
+{
+	struct cpu_info *ci = curcpu();
+	uint32_t s = disable_interrupts();
+	int oldipl = ci->ci_cpl;
+
+	if (ipl > ci->ci_cpl)
+		ci->ci_cpl = ipl;
+	restore_interrupts(s);
+	return oldipl;
+}
+
+int
+_spllower(int ipl)
+{
+	struct cpu_info *ci = curcpu();
+	uint32_t s = disable_interrupts();
+	int oldipl = ci->ci_cpl;
+
+	ci->ci_cpl = ipl;
+	restore_interrupts(s);
+
+	/* Check for pending soft interrupts at the new (lower) IPL */
+	if (ci->ci_data.cpu_softints >> ipl)
+		dosoftints();
+	return oldipl;
+}
+
+void
+splx(int savedipl)
+{
+	struct cpu_info *ci = curcpu();
+	uint32_t s = disable_interrupts();
+
+	ci->ci_cpl = savedipl;
+	restore_interrupts(s);
+
+	if (ci->ci_data.cpu_softints >> savedipl)
+		dosoftints();
+}
+
+void
+dosoftints(void)
+{
+
+	/* TODO: dispatch pending soft interrupts */
+}
