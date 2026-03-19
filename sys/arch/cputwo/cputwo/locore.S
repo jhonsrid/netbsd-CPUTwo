@@ -268,6 +268,89 @@ ENTRY_NP(cpu_switchto)
 END(cpu_switchto)
 
 /*
+ * lwp_trampoline: entry point for newly-forked LWPs.
+ *
+ * cpu_lwp_fork() sets up the switchframe so that cpu_switchto()
+ * "returns" here.  The callee-saved registers hold:
+ *   r4 = func      (the child function to call)
+ *   r5 = arg       (argument for func)
+ *   r6 = newlwp    (struct lwp * of the new LWP)
+ *
+ * On entry, r0 = previous lwp (returned by cpu_switchto).
+ *
+ * Sequence:
+ *   1. Call lwp_startup(prev_lwp, new_lwp) — MI bookkeeping
+ *   2. Call func(arg) — the child function
+ *   3. Return to userland via exception_return
+ */
+ENTRY_NP(lwp_trampoline)
+	/* r0 = prev_lwp (from cpu_switchto return value) */
+	mov	r1, r6			/* r1 = new_lwp (saved in r6) */
+	jmp	lr, lwp_startup		/* lwp_startup(prev_lwp, new_lwp) */
+
+	/* Call the child function: func(arg) */
+	mov	r0, r5			/* r0 = arg */
+	mov	r12, r4			/* r12 = func */
+	.word	0x2AEC0000		/* callr lr, r12: opcode=0x2A rd=14 rs1=12 */
+
+	/*
+	 * Return to userland.  The trapframe was set up by cpu_lwp_fork
+	 * on the kernel stack.  We need to restore it and SYSRET.
+	 * The trapframe is at the top of the kernel stack.
+	 */
+	ba	exception_return
+END(lwp_trampoline)
+
+/*
+ * exception_return: restore trapframe from sp and return to user/kernel.
+ * Used by lwp_trampoline after the child function returns.
+ * Expects the trapframe to be at sp.
+ */
+ENTRY_NP(exception_return)
+	/* Restore supervisor state */
+	lui	r0, 0x03FF
+	ori	r0, r0, 0xF000
+
+	lw	r1, sp, TF_PC
+	sw	r1, r0, 0x00		/* EPC */
+	lw	r1, sp, TF_EFLAGS
+	sw	r1, r0, 0x04		/* EFLAGS */
+	lw	r1, sp, TF_STATUS
+	sw	r1, r0, 0x14		/* ESTATUS */
+
+	/* Restore general registers */
+	lw	r1,  sp, TF_R0+4
+	lw	r2,  sp, TF_R0+8
+	lw	r3,  sp, TF_R0+12
+	lw	r4,  sp, TF_R0+16
+	lw	r5,  sp, TF_R0+20
+	lw	r6,  sp, TF_R0+24
+	lw	r7,  sp, TF_R0+28
+	lw	r8,  sp, TF_R0+32
+	lw	r9,  sp, TF_R0+36
+	lw	r10, sp, TF_R0+40
+	lw	r11, sp, TF_R0+44
+	lw	r12, sp, TF_R0+48
+	lw	r14, sp, TF_R0+56	/* lr */
+
+	/* Check ESTATUS for user/kernel return */
+	lui	r0, 0x03FF
+	ori	r0, r0, 0xF014
+	lw	r0, r0, 0
+	andi	r0, r0, 0x01
+	lw	r0, sp, TF_R0		/* restore r0 (lw doesn't touch flags) */
+	bne	.Leret_kern
+
+	/* User return */
+	lw	sp, sp, TF_R0+52
+	.word	0x11000000		/* SYSRET */
+
+.Leret_kern:
+	addi	sp, sp, TF_SIZE
+	.word	0x3F000000		/* KRET */
+END(exception_return)
+
+/*
  * setjmp(label_t *jb)
  * Save callee-saved registers to jb, return 0.
  */
