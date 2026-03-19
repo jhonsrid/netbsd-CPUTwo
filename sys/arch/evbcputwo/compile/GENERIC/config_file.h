@@ -78,7 +78,7 @@ static const char config[] __used =
 "_CFG_###> \n"
 "_CFG_###> options\\011\\011EXEC_ELF32\\011\\011# exec ELF32 binaries\n"
 "_CFG_###> \n"
-"_CFG_###> makeoptions\\011DEFTEXTADDR=\"0x80000000\"\n"
+"_CFG_###> makeoptions\\011DEFTEXTADDR=\"0x00000000\"\n"
 "_CFG_###> makeoptions\\011BOARDTYPE=\"evbcputwo\"\n"
 "_CFG_###> makeoptions\\011BOARDMKFRAG=\"${CPUTWO}/conf/mk.evbcputwo\"\n"
 "_CFG_###> \n"

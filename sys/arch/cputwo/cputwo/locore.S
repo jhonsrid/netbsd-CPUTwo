@@ -58,12 +58,68 @@
  * On entry: supervisor mode, IE=0, all GPRs preserved by hardware.
  * EPC/EFLAGS/ESTATUS/CAUSE set by hardware.
  *
- * We save all registers to a trapframe on the kernel stack, then call trap().
+ * If the trap came from user mode (ESTATUS bit 0 = 0), we must switch
+ * to the LWP's kernel stack before saving the trapframe.  We use r12
+ * (caller-saved scratch) as a temporary.
+ *
+ * Kernel stack pointer is stored in the LWP's PCB.  We find it via:
+ *   cpu_info_store → ci_curlwp → l_addr (PCB) → pcb_tf (kernel SP)
+ * But that's too many loads before we have a scratch register.
+ *
+ * Simpler approach: store the kernel SP in a global variable
+ * (cputwo_kern_sp) which is updated on every context switch and
+ * return-to-user.  This is the approach used by simple single-CPU ports.
+ */
+
+	.data
+	.globl	cputwo_kern_sp
+cputwo_kern_sp:
+	.word	0			/* kernel SP for current LWP */
+
+	.text
+/*
+ * exception_entry: all exceptions dispatch here via the EVEC table.
+ *
+ * On entry (hardware guarantees):
+ *   - Supervisor mode, IE=0
+ *   - All GPRs (r0-r14) have their pre-trap values
+ *   - EPC, EFLAGS, ESTATUS, CAUSE written by hardware
+ *
+ * r12 is caller-saved in the C ABI, so we use it as scratch here.
+ * Its pre-trap value is lost; the trapframe stores 0 for tf_r[12].
+ * This is acceptable: r12 is not used for syscall args or return
+ * values, and kernel code treats it as caller-saved.
  */
 ENTRY_NP(exception_entry)
-	/* Save scratch register so we can use it */
-	addi	sp, sp, -TF_SIZE
+	/* Check ESTATUS bit 0: 1=supervisor, 0=user */
+	lui	r12, 0x03FF
+	ori	r12, r12, 0xF014	/* r12 = &ESTATUS (0x03FFF014) */
+	lw	r12, r12, 0		/* r12 = ESTATUS */
+	andi	r12, r12, 0x01		/* sets Z if user mode */
+	bne	.Lkern_trap
 
+	/*
+	 * User-mode trap: switch to kernel stack.
+	 */
+	mov	r12, sp			/* r12 = user SP */
+	lui	sp, %hi(cputwo_kern_sp)
+	ori	sp, sp, %lo(cputwo_kern_sp)
+	lw	sp, sp, 0		/* sp = kernel stack top */
+	addi	sp, sp, -TF_SIZE
+	sw	r12, sp, TF_R0+52	/* tf_r[13] = user SP */
+	movi	r12, 0
+	sw	r12, sp, TF_R0+48	/* tf_r[12] = 0 (clobbered) */
+	ba	.Lsave_regs
+
+.Lkern_trap:
+	/* Kernel-mode trap: sp is already a kernel stack */
+	addi	sp, sp, -TF_SIZE
+	addi	r12, sp, TF_SIZE
+	sw	r12, sp, TF_R0+52	/* tf_r[13] = pre-trap kernel SP */
+	movi	r12, 0
+	sw	r12, sp, TF_R0+48	/* tf_r[12] = 0 (clobbered) */
+
+.Lsave_regs:
 	/* Save all general registers to trapframe */
 	sw	r0,  sp, TF_R0
 	sw	r1,  sp, TF_R0+4
@@ -77,21 +133,17 @@ ENTRY_NP(exception_entry)
 	sw	r9,  sp, TF_R0+36
 	sw	r10, sp, TF_R0+40
 	sw	r11, sp, TF_R0+44
-	sw	r12, sp, TF_R0+48
-	/* r13 (sp) -- save the pre-exception sp (sp + TF_SIZE) */
-	addi	r0, sp, TF_SIZE
-	sw	r0,  sp, TF_R0+52
+	/* r12 and sp already saved above */
 	sw	r14, sp, TF_R0+56	/* lr */
-	/* r15 (pc) saved as EPC */
 
 	/* Save supervisor state from memory-mapped registers */
 	lui	r0, 0x03FF
 	ori	r0, r0, 0xF000		/* r0 = 0x03FFF000 */
 	lw	r1, r0, 0x00		/* EPC */
 	sw	r1, sp, TF_PC
-	lw	r1, r0, 0x10		/* STATUS */
+	lw	r1, r0, 0x14		/* ESTATUS (pre-trap STATUS, saved by hw) */
 	sw	r1, sp, TF_STATUS
-	lw	r1, r0, 0x04		/* EFLAGS */
+	lw	r1, r0, 0x04		/* EFLAGS (pre-trap flags, saved by hw) */
 	sw	r1, sp, TF_EFLAGS
 	lw	r1, r0, 0x0C		/* CAUSE */
 	sw	r1, sp, TF_CAUSE
@@ -125,12 +177,27 @@ ENTRY_NP(exception_entry)
 	lw	r10, sp, TF_R0+40
 	lw	r11, sp, TF_R0+44
 	lw	r12, sp, TF_R0+48
-	/* Skip sp restore -- we pop the frame instead */
 	lw	r14, sp, TF_R0+56	/* lr */
-	lw	r0,  sp, TF_R0		/* restore r0 last */
-	addi	sp, sp, TF_SIZE
 
-	/* Return from exception: KRET restores PC, flags, STATUS atomically */
+	/*
+	 * Restore SP: if returning to user, load user SP from trapframe.
+	 * If returning to kernel, pop the frame.
+	 * Check ESTATUS bit 0 to determine.
+	 */
+	lui	r0, 0x03FF
+	ori	r0, r0, 0xF014		/* &ESTATUS */
+	lw	r0, r0, 0
+	andi	r0, r0, 0x01
+	lw	r0, sp, TF_R0		/* restore r0 early */
+	bne	.Lkret_kern
+
+	/* User return: restore user SP from trapframe, then SYSRET */
+	lw	sp, sp, TF_R0+52
+	.word	0x11000000		/* SYSRET */
+
+.Lkret_kern:
+	/* Kernel return: pop trapframe, then KRET */
+	addi	sp, sp, TF_SIZE
 	.word	0x3F000000		/* KRET */
 END(exception_entry)
 
@@ -182,8 +249,18 @@ ENTRY_NP(cpu_switchto)
 	lw	sp,  r3, SF_SP
 	lw	lr,  r3, SF_LR
 
-	/* Update curlwp */
-	/* TODO: update cpu_info_store.ci_curlwp = newlwp */
+	/*
+	 * Update curlwp and kernel SP for trap entry.
+	 * r1 still holds newlwp.
+	 */
+	lui	r3, %hi(cpu_info_store)
+	ori	r3, r3, %lo(cpu_info_store)
+	sw	r1, r3, CI_CURLWP
+
+	/* Update cputwo_kern_sp = new kernel stack top (sp after switch) */
+	lui	r3, %hi(cputwo_kern_sp)
+	ori	r3, r3, %lo(cputwo_kern_sp)
+	sw	sp, r3, 0
 
 	/* Return oldlwp */
 	mov	r0, r12

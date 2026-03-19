@@ -14,14 +14,21 @@
  * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
  * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
- * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * PURPOSE ARE DISCLAIMED.
+ */
+
+/*
+ * CPUTwo interrupt priority level (IPL) management.
+ *
+ * IPL is implemented in software.  The single IC enable register is
+ * not directly manipulated per-IPL; instead, interrupt handlers check
+ * the current IPL and defer sources that are masked.
+ *
+ * IC source → IPL mapping:
+ *   Timer (bit 0)     → IPL_SCHED (6)
+ *   UART RX (bit 1)   → IPL_VM (5)
+ *   UART TX (bit 2)   → IPL_VM (5)
+ *   Block dev (bit 3)  → IPL_VM (5)
  */
 
 #include <sys/cdefs.h>
@@ -29,12 +36,14 @@ __KERNEL_RCSID(0, "$NetBSD$");
 
 #include <sys/param.h>
 #include <sys/systm.h>
+#include <sys/cpu.h>
+#include <sys/intr.h>
 
 #include <machine/cpu.h>
 #include <machine/intr.h>
 
 /*
- * Supervisor STATUS register is memory-mapped at 0x03FFF010.
+ * Supervisor STATUS register (memory-mapped).
  * Bit 1 = IE (interrupt enable).
  */
 #define CPUTWO_STATUS	(*(volatile uint32_t *)0x03FFF010)
@@ -43,7 +52,7 @@ static inline uint32_t
 disable_interrupts(void)
 {
 	uint32_t old = CPUTWO_STATUS;
-	CPUTWO_STATUS = old & ~0x2;	/* clear IE */
+	CPUTWO_STATUS = old & ~0x2;
 	return old;
 }
 
@@ -52,6 +61,20 @@ restore_interrupts(uint32_t saved)
 {
 	CPUTWO_STATUS = saved;
 }
+
+/*
+ * IPL for each IC source.
+ */
+static const int ic_source_ipl[4] = {
+	[0] = IPL_SCHED,	/* timer */
+	[1] = IPL_VM,		/* UART RX */
+	[2] = IPL_VM,		/* UART TX */
+	[3] = IPL_VM,		/* block device */
+};
+
+/* ------------------------------------------------------------------ */
+/*  SPL functions                                                      */
+/* ------------------------------------------------------------------ */
 
 int
 _splraise(int ipl)
@@ -76,8 +99,7 @@ _spllower(int ipl)
 	ci->ci_cpl = ipl;
 	restore_interrupts(s);
 
-	/* Check for pending soft interrupts at the new (lower) IPL */
-	if (ci->ci_data.cpu_softints >> ipl)
+	if (ci->ci_intr_depth == 0)
 		dosoftints();
 	return oldipl;
 }
@@ -91,13 +113,54 @@ splx(int savedipl)
 	ci->ci_cpl = savedipl;
 	restore_interrupts(s);
 
-	if (ci->ci_data.cpu_softints >> savedipl)
+	if (ci->ci_intr_depth == 0)
 		dosoftints();
 }
 
+/* ------------------------------------------------------------------ */
+/*  Hardware interrupt IPL filtering                                   */
+/* ------------------------------------------------------------------ */
+
+/*
+ * Filter pending IC sources against current IPL.
+ * Returns bitmask of sources allowed at the current IPL.
+ * Sources at or below ci_cpl are left pending in the IC hardware
+ * and will be dispatched when a subsequent interrupt re-reads IC_PENDING.
+ */
+uint32_t
+cputwo_intr_allowed(uint32_t pending)
+{
+	struct cpu_info *ci = curcpu();
+	int cpl = ci->ci_cpl;
+	uint32_t allowed = 0;
+	int i;
+
+	for (i = 0; i < 4; i++) {
+		if (!(pending & (1u << i)))
+			continue;
+		if (ic_source_ipl[i] > cpl)
+			allowed |= (1u << i);
+	}
+	return allowed;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Soft interrupt dispatch                                            */
+/* ------------------------------------------------------------------ */
+
+/*
+ * dosoftints: called when IPL is lowered.
+ *
+ * Without __HAVE_FAST_SOFTINTS, the MI kernel handles soft interrupts
+ * via dedicated LWPs that are scheduled by softint_schedule().
+ * Our job here is just to request a reschedule if softints are pending,
+ * so the scheduler picks up the softint LWPs.
+ */
 void
 dosoftints(void)
 {
+	struct cpu_info *ci = curcpu();
 
-	/* TODO: dispatch pending soft interrupts */
+	if (ci->ci_data.cpu_softints >> ci->ci_cpl)
+		ci->ci_want_resched = 1;
 }

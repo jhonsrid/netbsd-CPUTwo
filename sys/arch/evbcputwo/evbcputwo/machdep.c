@@ -88,6 +88,18 @@ cputwo_init(void)
 	cpu_info_store.ci_curlwp = &lwp0;
 
 	/*
+	 * Initialize the kernel stack pointer used by exception_entry
+	 * to switch from user to kernel stack.  During boot, lwp0 uses
+	 * the boot stack set up by cputwo_start.S.  cpu_switchto will
+	 * update this on every context switch.
+	 */
+	{
+		extern uint32_t cputwo_kern_sp;
+		register uint32_t sp_val __asm("r13");
+		cputwo_kern_sp = sp_val;
+	}
+
+	/*
 	 * Step 2: Set up exception vector table.
 	 * EVEC register holds the BASE ADDRESS of a table of 32-bit handler
 	 * addresses.  On exception with cause N, hardware loads the handler

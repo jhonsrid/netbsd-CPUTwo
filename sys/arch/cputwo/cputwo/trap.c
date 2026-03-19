@@ -66,38 +66,53 @@ extern void cputwo_ic_ack(uint32_t);
 extern void cputwo_uart_intr(void);
 /* From cputwo_blk.c */
 extern void cputwo_blk_intr(void);
+/* From intr.c */
+extern uint32_t cputwo_intr_allowed(uint32_t);
 
 /*
  * Handle hardware interrupts (cause 0x06).
- * Read IC pending register, dispatch to appropriate handler.
+ *
+ * Read IC pending register, filter by current IPL (sources at or
+ * below ci_cpl are deferred and dispatched when IPL is lowered),
+ * then dispatch allowed sources.
  */
 static void
 cputwo_interrupt(struct trapframe *tf)
 {
 	struct cpu_info *ci = curcpu();
-	uint32_t pending;
+	uint32_t pending, allowed;
+	int saved_ipl;
 
 	ci->ci_intr_depth++;
 
 	pending = cputwo_ic_pending();
+	allowed = cputwo_intr_allowed(pending);
 
-	if (pending & IC_TIMER) {
+	if (allowed & IC_TIMER) {
 		struct clockframe cf;
+
+		saved_ipl = _splraise(IPL_SCHED);
 
 		cf.cf_pc = tf->tf_pc;
 		cf.cf_sr = tf->tf_status;
 		cf.cf_intr_depth = ci->ci_intr_depth;
 		cputwo_clockintr(&cf);
+
+		splx(saved_ipl);
 	}
 
-	if (pending & (IC_UART_RX | IC_UART_TX)) {
+	if (allowed & (IC_UART_RX | IC_UART_TX)) {
+		saved_ipl = _splraise(IPL_VM);
 		cputwo_uart_intr();
-		cputwo_ic_ack(pending & (IC_UART_RX | IC_UART_TX));
+		cputwo_ic_ack(allowed & (IC_UART_RX | IC_UART_TX));
+		splx(saved_ipl);
 	}
 
-	if (pending & IC_BLKDEV) {
+	if (allowed & IC_BLKDEV) {
+		saved_ipl = _splraise(IPL_VM);
 		cputwo_blk_intr();
 		cputwo_ic_ack(IC_BLKDEV);
+		splx(saved_ipl);
 	}
 
 	ci->ci_intr_depth--;

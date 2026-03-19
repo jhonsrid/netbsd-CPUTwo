@@ -60,7 +60,6 @@ struct cpu_info {
 
 	int ci_want_resched;
 	int ci_cpl;			/* current priority level */
-	u_int ci_softints;
 	volatile u_int ci_intr_depth;
 };
 

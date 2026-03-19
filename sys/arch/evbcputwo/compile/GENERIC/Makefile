@@ -5,7 +5,7 @@ IDENT= \
 
 MACHINE=evbcputwo
 S=	/Users/john/netbsd-CPUTwo/sys
-DEFTEXTADDR=0x80000000
+DEFTEXTADDR=0x00000000
 BOARDTYPE=evbcputwo
 BOARDMKFRAG=${CPUTWO}/conf/mk.evbcputwo
 #	$NetBSD$
