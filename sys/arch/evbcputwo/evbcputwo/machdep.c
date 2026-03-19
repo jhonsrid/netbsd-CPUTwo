@@ -128,23 +128,35 @@ cputwo_init(void)
 	    (unsigned long)physmem);
 
 	/*
-	 * Step 5: Register free physical memory with UVM.
-	 *
-	 * uvm_page_physload() takes page frame numbers.
-	 * We register the free region from end-of-kernel to end-of-RAM.
-	 * The first two args are the segment boundaries (start, end),
-	 * the second two are the available (free) range within.
-	 */
-	uvm_page_physload(atop(first_free_pa), atop(PHYS_RAM_END),
-	    atop(first_free_pa), atop(PHYS_RAM_END),
-	    VM_FREELIST_DEFAULT);
-
-	/*
-	 * Step 6: Bootstrap the pmap (kernel page tables).
+	 * Step 5: Bootstrap the pmap (kernel page tables).
+	 * pmap_bootstrap() may steal physical pages for page table
+	 * allocation via bootstrap_alloc_page().  We register free
+	 * memory with UVM AFTER pmap_bootstrap so the stolen pages
+	 * are excluded from the free pool.
 	 */
 	pmap_bootstrap();
 
-	printf("pmap_bootstrap done, calling main()\n");
+	printf("pmap_bootstrap done\n");
+
+	/*
+	 * Step 6: Register remaining free physical memory with UVM.
+	 *
+	 * pmap_bootstrap() advanced its internal free pointer past any
+	 * pages it allocated.  We query it to get the real first free PA.
+	 */
+	{
+		extern paddr_t pmap_bootstrap_free_pa(void);
+		paddr_t real_free = pmap_bootstrap_free_pa();
+
+		uvm_page_physload(atop(real_free), atop(PHYS_RAM_END),
+		    atop(real_free), atop(PHYS_RAM_END),
+		    VM_FREELIST_DEFAULT);
+
+		printf("free memory: 0x%lx - 0x%lx (%lu KB)\n",
+		    (unsigned long)real_free,
+		    (unsigned long)PHYS_RAM_END,
+		    (unsigned long)(PHYS_RAM_END - real_free) / 1024);
+	}
 
 	/*
 	 * Step 7: Enter main kernel initialization.

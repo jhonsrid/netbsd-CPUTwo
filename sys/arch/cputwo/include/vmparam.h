@@ -71,7 +71,12 @@
  * Virtual address space layout.
  * Lower half [0, 0x80000000) is user; upper half is kernel.
  */
-#define	VM_MIN_ADDRESS		((vaddr_t) 0x0)
+/*
+ * User VA starts above the kernel identity map region (0x00000000-0x03FFFFFF).
+ * The identity map uses supervisor-only superpages (G=1, U=0) in every
+ * L1 table, so user code cannot access them.  Start user space at 0x04000000.
+ */
+#define	VM_MIN_ADDRESS		((vaddr_t) 0x04000000)
 #define	VM_MAXUSER_ADDRESS	((vaddr_t) 0x80000000U - PAGE_SIZE)
 #define	VM_MAX_ADDRESS		VM_MAXUSER_ADDRESS
 

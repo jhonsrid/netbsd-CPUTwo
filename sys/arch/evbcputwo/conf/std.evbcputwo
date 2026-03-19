@@ -5,7 +5,7 @@ include		"conf/std"		# MI standard options
 
 options		EXEC_ELF32		# exec ELF32 binaries
 
-makeoptions	DEFTEXTADDR="0x80000000"
+makeoptions	DEFTEXTADDR="0x00000000"
 makeoptions	BOARDTYPE="evbcputwo"
 makeoptions	BOARDMKFRAG="${CPUTWO}/conf/mk.evbcputwo"
 
