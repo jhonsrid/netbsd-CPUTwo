@@ -10,6 +10,9 @@ SYSTEM_FIRST_SFILE=	${THISCPUTWO}/evbcputwo/cputwo_start.S
 KERNEL_BASE_PHYS=	0x00000000
 KERNEL_BASE_VIRT=	0x80000000
 
+# LLD requires explicit --image-base for text at address 0
+BOARDMKFRAG_LINKFLAGS=	--image-base=0
+
 # Produce a raw binary for QEMU -kernel
 SYSTEM_LD_TAIL_EXTRA+=; \
 	echo ${OBJCOPY} -S -O binary $@ $@.bin; \

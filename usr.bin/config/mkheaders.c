@@ -123,12 +123,12 @@ fprint_global(FILE *fp, const char *name, long long value)
 	 */
 	fprintf(fp, "#ifdef _LOCORE\n"
 	    " .ifndef _KERNEL_OPT_%s\n"
-	    " .global _KERNEL_OPT_%s\n"
+	    " .weak _KERNEL_OPT_%s\n"
 	    " .equiv _KERNEL_OPT_%s,0x%llx\n"
 	    " .endif\n"
 	    "#else\n"
 	    "__asm(\" .ifndef _KERNEL_OPT_%s\\n"
-	    " .global _KERNEL_OPT_%s\\n"
+	    " .weak _KERNEL_OPT_%s\\n"
 	    " .equiv _KERNEL_OPT_%s,0x%llx\\n"
 	    " .endif\");\n"
 	    "#endif\n",

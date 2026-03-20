@@ -1,4 +1,5 @@
 obj/
 *.d
 *.o
+sys/arch/evbcputwo/compile/GENERIC/
 
