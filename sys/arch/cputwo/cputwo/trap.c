@@ -139,10 +139,18 @@ trap(struct trapframe *tf)
 		cputwo_interrupt(tf);
 		return;
 
-	case T_SYSCALL:
-		/* TODO: syscall dispatch */
-		panic("trap: syscall not implemented, pc=%#x", tf->tf_pc);
-		break;
+	case T_SYSCALL: {
+		struct lwp *l = curlwp;
+
+		/*
+		 * EPC points to the instruction after SYSCALL (hw sets
+		 * EPC=PC+4 for syscalls).  The trapframe already has this.
+		 * Call the MD syscall dispatcher via p_md.md_syscall,
+		 * set up by syscall_intern().
+		 */
+		(*l->l_proc->p_md.md_syscall)(l, tf);
+		return;
+	}
 
 	case T_IFAULT:
 	case T_LFAULT:
