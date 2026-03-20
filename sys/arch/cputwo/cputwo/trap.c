@@ -57,6 +57,9 @@ __KERNEL_RCSID(0, "$NetBSD$");
  */
 #define SREG_BADADDR	(*(volatile uint32_t *)0x03FFF01C)
 
+/* forward declaration */
+void trap(struct trapframe *);
+
 /* From clock.c */
 extern void cputwo_clockintr(struct clockframe *);
 /* From cputwo_ic.c */
@@ -148,7 +151,7 @@ trap(struct trapframe *tf)
 		 * Call the MD syscall dispatcher via p_md.md_syscall,
 		 * set up by syscall_intern().
 		 */
-		(*l->l_proc->p_md.md_syscall)(l, tf);
+		(*l->l_proc->p_md.md_syscall)(tf);
 		return;
 	}
 

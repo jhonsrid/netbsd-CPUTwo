@@ -62,7 +62,7 @@ static __inline int
 bus_space_subregion(bus_space_tag_t t, bus_space_handle_t h,
     bus_size_t offset, bus_size_t size, bus_space_handle_t *handlep)
 {
-	*handlep = (bus_space_handle_t)((uint8_t *)(h) + offset);
+	*handlep = (bus_space_handle_t)((volatile uint8_t *)(h) + offset);
 	return 0;
 }
 
@@ -77,19 +77,19 @@ bus_space_subregion(bus_space_tag_t t, bus_space_handle_t h,
 static __inline uint8_t
 bus_space_read_1(bus_space_tag_t t, bus_space_handle_t h, bus_size_t o)
 {
-	return *(volatile uint8_t *)((uint8_t *)(h) + o);
+	return *(volatile uint8_t *)((volatile uint8_t *)(h) + o);
 }
 
 static __inline uint16_t
 bus_space_read_2(bus_space_tag_t t, bus_space_handle_t h, bus_size_t o)
 {
-	return *(volatile uint16_t *)((uint8_t *)(h) + o);
+	return *(volatile uint16_t *)((volatile uint8_t *)(h) + o);
 }
 
 static __inline uint32_t
 bus_space_read_4(bus_space_tag_t t, bus_space_handle_t h, bus_size_t o)
 {
-	return *(volatile uint32_t *)((uint8_t *)(h) + o);
+	return *(volatile uint32_t *)((volatile uint8_t *)(h) + o);
 }
 
 /*
@@ -99,21 +99,21 @@ static __inline void
 bus_space_write_1(bus_space_tag_t t, bus_space_handle_t h, bus_size_t o,
     uint8_t v)
 {
-	*(volatile uint8_t *)((uint8_t *)(h) + o) = v;
+	*(volatile uint8_t *)((volatile uint8_t *)(h) + o) = v;
 }
 
 static __inline void
 bus_space_write_2(bus_space_tag_t t, bus_space_handle_t h, bus_size_t o,
     uint16_t v)
 {
-	*(volatile uint16_t *)((uint8_t *)(h) + o) = v;
+	*(volatile uint16_t *)((volatile uint8_t *)(h) + o) = v;
 }
 
 static __inline void
 bus_space_write_4(bus_space_tag_t t, bus_space_handle_t h, bus_size_t o,
     uint32_t v)
 {
-	*(volatile uint32_t *)((uint8_t *)(h) + o) = v;
+	*(volatile uint32_t *)((volatile uint8_t *)(h) + o) = v;
 }
 
 /*
@@ -193,7 +193,7 @@ static __inline void
 bus_space_read_region_1(bus_space_tag_t t, bus_space_handle_t h,
     bus_size_t o, uint8_t *a, size_t c)
 {
-	volatile uint8_t *p = (volatile uint8_t *)((uint8_t *)(h) + o);
+	volatile uint8_t *p = (volatile uint8_t *)((volatile uint8_t *)(h) + o);
 	while (c--)
 		*a++ = *p++;
 }
@@ -202,7 +202,7 @@ static __inline void
 bus_space_read_region_2(bus_space_tag_t t, bus_space_handle_t h,
     bus_size_t o, uint16_t *a, size_t c)
 {
-	volatile uint16_t *p = (volatile uint16_t *)((uint8_t *)(h) + o);
+	volatile uint16_t *p = (volatile uint16_t *)((volatile uint8_t *)(h) + o);
 	while (c--)
 		*a++ = *p++;
 }
@@ -211,7 +211,7 @@ static __inline void
 bus_space_read_region_4(bus_space_tag_t t, bus_space_handle_t h,
     bus_size_t o, uint32_t *a, size_t c)
 {
-	volatile uint32_t *p = (volatile uint32_t *)((uint8_t *)(h) + o);
+	volatile uint32_t *p = (volatile uint32_t *)((volatile uint8_t *)(h) + o);
 	while (c--)
 		*a++ = *p++;
 }
@@ -220,7 +220,7 @@ static __inline void
 bus_space_write_region_1(bus_space_tag_t t, bus_space_handle_t h,
     bus_size_t o, const uint8_t *a, size_t c)
 {
-	volatile uint8_t *p = (volatile uint8_t *)((uint8_t *)(h) + o);
+	volatile uint8_t *p = (volatile uint8_t *)((volatile uint8_t *)(h) + o);
 	while (c--)
 		*p++ = *a++;
 }
@@ -229,7 +229,7 @@ static __inline void
 bus_space_write_region_2(bus_space_tag_t t, bus_space_handle_t h,
     bus_size_t o, const uint16_t *a, size_t c)
 {
-	volatile uint16_t *p = (volatile uint16_t *)((uint8_t *)(h) + o);
+	volatile uint16_t *p = (volatile uint16_t *)((volatile uint8_t *)(h) + o);
 	while (c--)
 		*p++ = *a++;
 }
@@ -238,7 +238,7 @@ static __inline void
 bus_space_write_region_4(bus_space_tag_t t, bus_space_handle_t h,
     bus_size_t o, const uint32_t *a, size_t c)
 {
-	volatile uint32_t *p = (volatile uint32_t *)((uint8_t *)(h) + o);
+	volatile uint32_t *p = (volatile uint32_t *)((volatile uint8_t *)(h) + o);
 	while (c--)
 		*p++ = *a++;
 }
@@ -256,7 +256,7 @@ static __inline void
 bus_space_set_region_1(bus_space_tag_t t, bus_space_handle_t h,
     bus_size_t o, uint8_t v, size_t c)
 {
-	volatile uint8_t *p = (volatile uint8_t *)((uint8_t *)(h) + o);
+	volatile uint8_t *p = (volatile uint8_t *)((volatile uint8_t *)(h) + o);
 	while (c--)
 		*p++ = v;
 }
@@ -265,7 +265,7 @@ static __inline void
 bus_space_set_region_2(bus_space_tag_t t, bus_space_handle_t h,
     bus_size_t o, uint16_t v, size_t c)
 {
-	volatile uint16_t *p = (volatile uint16_t *)((uint8_t *)(h) + o);
+	volatile uint16_t *p = (volatile uint16_t *)((volatile uint8_t *)(h) + o);
 	while (c--)
 		*p++ = v;
 }
@@ -274,7 +274,7 @@ static __inline void
 bus_space_set_region_4(bus_space_tag_t t, bus_space_handle_t h,
     bus_size_t o, uint32_t v, size_t c)
 {
-	volatile uint32_t *p = (volatile uint32_t *)((uint8_t *)(h) + o);
+	volatile uint32_t *p = (volatile uint32_t *)((volatile uint8_t *)(h) + o);
 	while (c--)
 		*p++ = v;
 }
@@ -290,8 +290,8 @@ bus_space_copy_region_1(bus_space_tag_t t,
     bus_space_handle_t h1, bus_size_t o1,
     bus_space_handle_t h2, bus_size_t o2, size_t c)
 {
-	volatile uint8_t *s = (volatile uint8_t *)((uint8_t *)(h1) + o1);
-	volatile uint8_t *d = (volatile uint8_t *)((uint8_t *)(h2) + o2);
+	volatile uint8_t *s = (volatile uint8_t *)((volatile uint8_t *)(h1) + o1);
+	volatile uint8_t *d = (volatile uint8_t *)((volatile uint8_t *)(h2) + o2);
 	while (c--)
 		*d++ = *s++;
 }
@@ -301,8 +301,8 @@ bus_space_copy_region_2(bus_space_tag_t t,
     bus_space_handle_t h1, bus_size_t o1,
     bus_space_handle_t h2, bus_size_t o2, size_t c)
 {
-	volatile uint16_t *s = (volatile uint16_t *)((uint8_t *)(h1) + o1);
-	volatile uint16_t *d = (volatile uint16_t *)((uint8_t *)(h2) + o2);
+	volatile uint16_t *s = (volatile uint16_t *)((volatile uint8_t *)(h1) + o1);
+	volatile uint16_t *d = (volatile uint16_t *)((volatile uint8_t *)(h2) + o2);
 	while (c--)
 		*d++ = *s++;
 }
@@ -312,8 +312,8 @@ bus_space_copy_region_4(bus_space_tag_t t,
     bus_space_handle_t h1, bus_size_t o1,
     bus_space_handle_t h2, bus_size_t o2, size_t c)
 {
-	volatile uint32_t *s = (volatile uint32_t *)((uint8_t *)(h1) + o1);
-	volatile uint32_t *d = (volatile uint32_t *)((uint8_t *)(h2) + o2);
+	volatile uint32_t *s = (volatile uint32_t *)((volatile uint8_t *)(h1) + o1);
+	volatile uint32_t *d = (volatile uint32_t *)((volatile uint8_t *)(h2) + o2);
 	while (c--)
 		*d++ = *s++;
 }

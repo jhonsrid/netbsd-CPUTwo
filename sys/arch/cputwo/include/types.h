@@ -68,7 +68,6 @@ typedef	unsigned long int	__register_t;
 /* No __HAVE_FAST_SOFTINTS — use slow path (LWP-based) for now */
 #define	__HAVE_MM_MD_DIRECT_MAPPED_PHYS
 #define	__HAVE_SYSCALL_INTERN
-#define	__HAVE_NEW_STYLE_BUS_H
 #define	__HAVE_CPU_DATA_FIRST
 #define	__HAVE_MINIMAL_EMUL
 

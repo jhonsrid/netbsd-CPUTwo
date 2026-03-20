@@ -180,6 +180,10 @@ pmap_walk(pt_entry_t *l1, vaddr_t va, bool alloc, bool bootstrap)
 	return &l2[l2idx];
 }
 
+/* forward declarations */
+void pmap_bootstrap(void);
+paddr_t pmap_bootstrap_free_pa(void);
+
 /* ------------------------------------------------------------------ */
 /*  Bootstrap                                                          */
 /* ------------------------------------------------------------------ */

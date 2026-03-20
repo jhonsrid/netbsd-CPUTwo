@@ -50,6 +50,12 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #define UART_CTRL_RX_IRQ	0x01
 #define UART_CTRL_TX_IRQ	0x02
 
+/* forward declarations */
+void cputwo_uart_init(void);
+void cputwo_uart_putc(int);
+int cputwo_uart_getc(void);
+void cputwo_uart_intr(void);
+
 /*
  * Initialize the UART hardware.
  * Enable RX interrupts; TX is polled for now.

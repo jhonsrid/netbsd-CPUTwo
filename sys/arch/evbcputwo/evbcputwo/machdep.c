@@ -69,6 +69,11 @@ extern char end[];
 /* Exception entry point from locore.S */
 extern void exception_entry(void);
 
+/* forward declarations */
+void cputwo_init(void);
+void pmap_bootstrap(void);
+int main(void);
+
 /*
  * Board-level initialization for evbcputwo.
  * Called from cputwo_start.S after stack setup, running at physical
@@ -95,8 +100,10 @@ cputwo_init(void)
 	 */
 	{
 		extern uint32_t cputwo_kern_sp;
-		register uint32_t sp_val __asm("r13");
-		cputwo_kern_sp = sp_val;
+		__asm volatile("lui r0, %%hi(cputwo_kern_sp)\n\t"
+		    "ori r0, r0, %%lo(cputwo_kern_sp)\n\t"
+		    "sw sp, r0, 0"
+		    : : : "r0", "memory");
 	}
 
 	/*

@@ -67,6 +67,8 @@ typedef struct {
 } mcontext_t;
 
 /* Machine-dependent uc_flags */
+#define	_UC_SETSTACK	0x00010000
+#define	_UC_CLRSTACK	0x00020000
 #define	_UC_TLSBASE	0x00080000
 
 #define _UC_MACHINE_SP(uc)	((uc)->uc_mcontext.__gregs[_REG_SP])

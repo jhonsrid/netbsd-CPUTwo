@@ -48,7 +48,7 @@ struct pmap {
 };
 
 extern struct pmap kernel_pmap_store;
-#define pmap_kernel()	(&kernel_pmap_store)
+/* pmap_kernel() is defined by MI uvm_pmap.h as kernel_pmap_ptr */
 
 #define __HAVE_VM_PAGE_MD
 

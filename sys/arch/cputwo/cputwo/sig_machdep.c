@@ -52,6 +52,7 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <machine/pcb.h>
 #include <machine/mcontext.h>
 
+
 /*
  * cpu_getmcontext: save the current register state into an mcontext.
  */
@@ -97,6 +98,26 @@ struct sigframe_siginfo {
 	siginfo_t sf_si;
 	ucontext_t sf_uc;
 };
+
+/*
+ * getframe: return the user stack pointer for signal frame placement.
+ * If an alternate signal stack is active for this signal, use it.
+ */
+static void *
+getframe(struct lwp *l, int sig, int *onstack)
+{
+	struct proc *p = l->l_proc;
+	struct trapframe *tf = l->l_md.md_utf;
+
+	if ((l->l_sigstk.ss_flags & (SS_DISABLE | SS_ONSTACK)) == 0 &&
+	    (SIGACTION(p, sig).sa_flags & SA_ONSTACK) != 0) {
+		*onstack = 1;
+		return (void *)((char *)l->l_sigstk.ss_sp +
+		    l->l_sigstk.ss_size);
+	}
+	*onstack = 0;
+	return (void *)(uintptr_t)tf->tf_r[_REG_SP];
+}
 
 /*
  * sendsig_siginfo: deliver a signal to a process.
@@ -168,14 +189,15 @@ sendsig_siginfo(const ksiginfo_t *ksi, const sigset_t *mask)
  * sys___sigreturn14: restore context after signal handler returns.
  */
 int
-sys___sigreturn14(struct lwp *l, const struct sys___sigreturn14_args *uap,
+compat_16_sys___sigreturn14(struct lwp *l,
+    const struct compat_16_sys___sigreturn14_args *uap,
     register_t *retval)
 {
 	/* {
 		syscallarg(struct ucontext *) sigcntxp;
 	} */
 	struct proc *p = l->l_proc;
-	struct ucontext uc;
+	ucontext_t uc;
 	int error;
 
 	error = copyin(SCARG(uap, sigcntxp), &uc, sizeof(uc));

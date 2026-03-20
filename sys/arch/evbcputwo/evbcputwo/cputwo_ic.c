@@ -48,6 +48,13 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #define IC_UART_TX	0x04
 #define IC_BLKDEV	0x08
 
+/* forward declarations */
+void cputwo_ic_init(void);
+void cputwo_ic_enable(uint32_t);
+void cputwo_ic_disable(uint32_t);
+uint32_t cputwo_ic_pending(void);
+void cputwo_ic_ack(uint32_t);
+
 /*
  * Initialize the interrupt controller.
  * Called from cputwo_init() or cpu_initclocks().

@@ -102,6 +102,9 @@ cpu_initclocks(void)
 	TIMER_CTRL = TIMER_CTRL_ENABLE | TIMER_CTRL_IRQ_ENABLE;
 }
 
+/* forward declaration */
+void cputwo_clockintr(struct clockframe *);
+
 /*
  * cputwo_clockintr: handle timer interrupt.
  *
@@ -141,7 +144,7 @@ setstatclockrate(int rate)
  * on the emulator's execution speed.
  */
 void
-delay(unsigned int us)
+delay(unsigned long us)
 {
 	volatile unsigned int i;
 

@@ -136,6 +136,9 @@ cpu_lwp_free2(struct lwp *l)
 	/* nothing */
 }
 
+/* forward declaration */
+void cpu_setfunc(struct lwp *, void (*)(void *), void *);
+
 /*
  * cpu_setfunc: change the function a kernel LWP will call.
  * Used for idle LWPs and softint LWPs.

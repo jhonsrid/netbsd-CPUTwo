@@ -42,6 +42,10 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <machine/cpu.h>
 #include <machine/intr.h>
 
+/* forward declarations */
+void dosoftints(void);
+uint32_t cputwo_intr_allowed(uint32_t);
+
 /*
  * Supervisor STATUS register (memory-mapped).
  * Bit 1 = IE (interrupt enable).

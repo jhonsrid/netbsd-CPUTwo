@@ -36,6 +36,11 @@ AFLAGS+=	-x assembler-with-cpp
 OPT_MODULAR=	%MODULAR%
 
 ##
+## (3) MI sources from config(8)
+##
+%INCLUDES
+
+##
 ## (4) local objects, compile rules, and dependencies
 ##
 .if !defined(SYSTEM_FIRST_OBJ)
@@ -54,6 +59,10 @@ ${SYSTEM_FIRST_OBJ}: ${SYSTEM_FIRST_SFILE} assym.h
 locore.o: ${CPUTWO}/cputwo/locore.S assym.h
 	${NORMAL_S}
 
+%OBJS
+%CFILES
+%SFILES
+
 ##
 ## (5) link settings
 ##
@@ -61,6 +70,8 @@ TEXTADDR?=		${DEFTEXTADDR}
 LINKFORMAT=		-N
 LINKFLAGS_NORMAL=	-X
 EXTRA_LINKFLAGS=	${BOARDMKFRAG_LINKFLAGS}
+
+%LOAD
 
 ##
 ## (6) port specific target dependencies
@@ -75,3 +86,11 @@ EXTRA_LINKFLAGS=	${BOARDMKFRAG_LINKFLAGS}
 ##
 MACHINE_PARAM=		MACHINE=evbcputwo
 MACHINE_PARAM+=		MACHINE_ARCH=cputwo
+
+##
+## (9) port independent kernel machinery
+##
+.include "$S/conf/Makefile.kern.inc"
+
+%RULES
+%MAKEOPTIONSAPPEND

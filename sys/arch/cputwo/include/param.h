@@ -33,8 +33,8 @@
 
 #define	_MACHINE_ARCH	cputwo
 #define	MACHINE_ARCH	"cputwo"
-#define	_MACHINE	cputwo
-#define	MACHINE		"cputwo"
+
+/* _MACHINE and MACHINE are defined by the board-level param.h */
 
 #define	MID_MACHINE	MID_CPUTWO
 

@@ -47,6 +47,7 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/systm.h>
 #include <sys/device.h>
 
+#include <sys/bus.h>
 #include <machine/intr.h>
 
 #define CPUTWO_UART_BASE	0x03F00000

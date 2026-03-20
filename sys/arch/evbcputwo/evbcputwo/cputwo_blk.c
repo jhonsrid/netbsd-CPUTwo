@@ -56,6 +56,11 @@ __KERNEL_RCSID(0, "$NetBSD$");
 
 #define BLK_SECTOR_SIZE	512
 
+/* forward declarations */
+int cputwo_blk_read(uint32_t, paddr_t);
+int cputwo_blk_write(uint32_t, paddr_t);
+void cputwo_blk_intr(void);
+
 /*
  * Read a single 512-byte sector.
  * buf must be physically contiguous and 512-byte aligned.

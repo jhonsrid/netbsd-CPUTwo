@@ -55,7 +55,7 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <machine/pcb.h>
 #include <machine/userret.h>
 
-static void cputwo_syscall(struct lwp *, struct trapframe *);
+static void cputwo_syscall(struct trapframe *);
 
 /*
  * syscall_intern: called once per process to set up the syscall handler.
@@ -72,8 +72,9 @@ syscall_intern(struct proc *p)
  * cputwo_syscall: handle a system call from userland.
  */
 static void
-cputwo_syscall(struct lwp *l, struct trapframe *tf)
+cputwo_syscall(struct trapframe *tf)
 {
+	struct lwp *l = curlwp;
 	struct proc *p = l->l_proc;
 	const struct sysent *callp;
 	int error, nargs;
@@ -114,8 +115,8 @@ cputwo_syscall(struct lwp *l, struct trapframe *tf)
 		break;
 	}
 
-	if (code < 0 || code >= p->p_emul->e_nsysent)
-		callp += p->p_emul->e_nosys;
+	if (code < 0 || code >= SYS_NSYSENT)
+		callp += 0;	/* entry 0 is nosys */
 	else
 		callp += code;
 
@@ -187,8 +188,6 @@ cputwo_syscall(struct lwp *l, struct trapframe *tf)
 	default:
 	bad:
 		/* Error: errno in r0, error flag = 1 in r1 */
-		if (p->p_emul->e_errno)
-			error = p->p_emul->e_errno[error];
 		tf->tf_r[0] = error;
 		tf->tf_r[1] = 1;
 		break;

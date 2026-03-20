@@ -59,6 +59,7 @@ struct cpu_info {
 	int ci_mtx_count;
 
 	int ci_want_resched;
+	cpuid_t ci_cpuid;		/* CPU id (always 0) */
 	int ci_cpl;			/* current priority level */
 	volatile u_int ci_intr_depth;
 };
