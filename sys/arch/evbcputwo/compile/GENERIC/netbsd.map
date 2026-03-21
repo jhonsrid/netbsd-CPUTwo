@@ -8988,8 +8988,8 @@
   4b7478   4b7478        4     1                 rootfstype
        0        0     5b26     1 .ident
        0        0     5b26     1         <internal>:(.ident)
-       0        0       e2     1 .comment
-       0        0       e2     1         <internal>:(.comment)
+       0        0      155     1 .comment
+       0        0      155     1         <internal>:(.comment)
        0        0      252     1 .debug_abbrev
        0        0      252     1         debugsyms.o:(.debug_abbrev)
        0        0     33f3     1 .debug_info

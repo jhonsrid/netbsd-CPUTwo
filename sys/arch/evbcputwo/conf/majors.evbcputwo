@@ -12,6 +12,7 @@ device-major	ptc		char 5			pty
 device-major	log		char 6
 device-major	com		char 26			com
 device-major	md		char 28  block 6	md
+device-major	ld		char 30  block 7	ld
 device-major	rnd		char 39			rnd
 device-major	ksyms		char 76			ksyms
 

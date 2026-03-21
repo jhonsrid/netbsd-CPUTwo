@@ -1,0 +1,3 @@
+#	$NetBSD$
+
+CPPFLAGS+=	-I${ARCHDIR} -DELFSIZE=32

@@ -1,0 +1,3 @@
+#	$NetBSD$
+
+SRCS+=	strtof.c

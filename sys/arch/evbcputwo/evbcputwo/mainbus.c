@@ -58,6 +58,7 @@ static const struct {
 } mainbus_devs[] = {
 	{ "cpu",	0,		-1 },
 	{ "com",	0x03F00000,	 1 },	/* UART, IRQ 1 (uart_rx) */
+	{ "ld",		0x03F03000,	 3 },	/* block device, IRQ 3 */
 	{ NULL,		0,		 0 },
 };
 

@@ -26,7 +26,10 @@ file	arch/evbcputwo/evbcputwo/com_mainbus.c	com_mainbus
 # Board device drivers
 file	arch/evbcputwo/evbcputwo/cputwo_ic.c
 file	arch/evbcputwo/evbcputwo/cputwo_uart.c
-file	arch/evbcputwo/evbcputwo/cputwo_blk.c
+
+# Block device — ld(4) backend attached to mainbus
+attach	ld at mainbus with ld_mainbus
+file	arch/evbcputwo/evbcputwo/cputwo_blk.c		ld_mainbus
 
 # Memory Disk (for ramdisk root)
 file	dev/md_root.c				memory_disk_hooks

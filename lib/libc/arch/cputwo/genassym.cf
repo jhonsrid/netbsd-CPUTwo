@@ -1,0 +1,65 @@
+#	$NetBSD$
+
+#
+# Copyright (c) 2024 The NetBSD Foundation, Inc.
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+# ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+# TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED.
+#
+
+include <sys/types.h>
+include <machine/mcontext.h>
+include <ucontext.h>
+include <signal.h>
+include <sys/siginfo.h>
+
+# Register indices in __gregset_t
+define _REG_R0		_REG_R0
+define _REG_R1		_REG_R1
+define _REG_R2		_REG_R2
+define _REG_R3		_REG_R3
+define _REG_R4		_REG_R4
+define _REG_R5		_REG_R5
+define _REG_R6		_REG_R6
+define _REG_R7		_REG_R7
+define _REG_R8		_REG_R8
+define _REG_R9		_REG_R9
+define _REG_R10		_REG_R10
+define _REG_R11		_REG_R11
+define _REG_R12		_REG_R12
+define _REG_R13		_REG_R13
+define _REG_R14		_REG_R14
+define _REG_SP		_REG_SP
+define _REG_LR		_REG_LR
+define _REG_PC		_REG_PC
+define _REG_STATUS	_REG_STATUS
+
+# ucontext offsets
+define _UC_GREGS	offsetof(ucontext_t, uc_mcontext.__gregs[0])
+define _UC_GREGS_R0	offsetof(ucontext_t, uc_mcontext.__gregs[_REG_R0])
+define _UC_GREGS_SP	offsetof(ucontext_t, uc_mcontext.__gregs[_REG_SP])
+define _UC_GREGS_LR	offsetof(ucontext_t, uc_mcontext.__gregs[_REG_LR])
+define _UC_GREGS_PC	offsetof(ucontext_t, uc_mcontext.__gregs[_REG_PC])
+define _UC_LINK		offsetof(ucontext_t, uc_link)
+define UCONTEXT_SIZE	sizeof(ucontext_t)
+
+define SIGINFO_SIZE	sizeof(siginfo_t)
+
+define STACK_T_SIZE	((sizeof(stack_t) + 2 * sizeof(register_t) - 1) & -(2 * sizeof(register_t)))
+define _STACK_T_SP	offsetof(stack_t, ss_sp)
+define _STACK_T_SIZE	offsetof(stack_t, ss_size)
+define _STACK_T_FLAGS	offsetof(stack_t, ss_flags)
+
+define SS_ONSTACK	SS_ONSTACK

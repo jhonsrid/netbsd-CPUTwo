@@ -38,3 +38,4 @@ pseudo-device	pty			# pseudo-terminals
 mainbus0	at root
 cpu0		at mainbus?
 com0		at mainbus? addr 0x03F00000
+ld0		at mainbus? addr 0x03F03000
