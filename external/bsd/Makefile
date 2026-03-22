@@ -2,7 +2,7 @@
 
 .include <bsd.own.mk>
 
-SUBDIR=	acpica am-utils bc byacc cron dhcpcd elftoolchain/common \
+SUBDIR=	acpica bc byacc cron dhcpcd elftoolchain/common \
 	ekermit elftosb fetch file flex jemalloc less \
 	libarchive libevent libfido2 liblzf libpcap mdocml \
 	ntp openresolv tcpdump tmux top tre wpa

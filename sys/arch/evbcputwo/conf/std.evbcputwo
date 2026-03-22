@@ -6,6 +6,9 @@ include		"conf/std"		# MI standard options
 options		EXEC_ELF32		# exec ELF32 binaries
 
 makeoptions	DEFTEXTADDR="0x00000000"
+makeoptions	LINKSCRIPT="-T ${CPUTWO}/../evbcputwo/conf/kern.ldscript"
+makeoptions	COPTS+="-D__builtin_strlen=strlen -D__builtin_strcmp=strcmp -D__builtin_strcpy=strcpy"
+makeoptions	DEFCOPTS="-O2"
 makeoptions	BOARDTYPE="evbcputwo"
 makeoptions	BOARDMKFRAG="${CPUTWO}/conf/mk.evbcputwo"
 

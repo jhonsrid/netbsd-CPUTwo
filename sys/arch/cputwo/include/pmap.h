@@ -51,6 +51,7 @@ extern struct pmap kernel_pmap_store;
 /* pmap_kernel() is defined by MI uvm_pmap.h as kernel_pmap_ptr */
 
 #define __HAVE_VM_PAGE_MD
+#define PMAP_GROWKERNEL
 
 struct vm_page_md {
 	uint32_t mdpg_attrs;

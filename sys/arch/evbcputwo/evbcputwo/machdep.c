@@ -136,6 +136,7 @@ cputwo_init(void)
 	 * Kernel occupies: 0x00000000 to end[].
 	 * Free memory: round_page(&end) to PHYS_RAM_END.
 	 */
+	uvm_setpagesize();
 	physmem = atop(PHYS_RAM_END);
 
 	first_free_pa = round_page((paddr_t)(uintptr_t)end);
@@ -180,6 +181,7 @@ cputwo_init(void)
 	/*
 	 * Step 7: Enter main kernel initialization.
 	 */
+	printf("calling main()\n");
 	main();
 
 	/* NOTREACHED */

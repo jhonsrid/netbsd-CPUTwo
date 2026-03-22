@@ -187,7 +187,8 @@ int user_va0_disable = __USER_VA0_DISABLE_DEFAULT;
 static __inline void
 uvm_map_align_va(vaddr_t *vap, vsize_t align, int topdown)
 {
-
+	if (!powerof2(align))
+		printf("uvm_map_align_va: bad align=0x%lx\n", (unsigned long)align);
 	KASSERT(powerof2(align));
 
 	if (align != 0 && (*vap & (align - 1)) != 0) {

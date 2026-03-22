@@ -14,10 +14,13 @@ SRCS+=	signbitf_ieee754.c signbitd_ieee754.c signbitl_ieee754.c
 SRCS+=	nanf.c
 SRCS+=	flt_rounds.c
 
-SRCS+=	setjmp.S longjmp.c
+SRCS+=	setjmp.S
 SRCS+=	_setjmp.S
 SRCS+=	sigsetjmp.S
 
 SRCS+=	makecontext.c _resumecontext.S swapcontext.S _lwp.c
+
+SRCS+=	cputwo_atomic.c cputwo_fenv.c cputwo_sync.c
+COPTS.cputwo_sync.c+=	-fno-builtin -ffreestanding -w
 
 CPPFLAGS._lwp.c	+= -D_LIBC_SOURCE

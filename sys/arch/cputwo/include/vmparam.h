@@ -52,7 +52,7 @@
 #endif
 
 #ifndef MAXDSIZ
-#define	MAXDSIZ		(1UL << 30)	/* max data size: 1024MB */
+#define	MAXDSIZ		(1UL << 26)	/* max data size: 64MB */
 #endif
 
 #ifndef MAXSSIZ
@@ -60,7 +60,7 @@
 #endif
 
 #ifndef DFLDSIZ
-#define	DFLDSIZ		(1UL << 27)	/* default data size: 128MB */
+#define	DFLDSIZ		(1UL << 25)	/* default data size: 32MB */
 #endif
 
 #ifndef DFLSSIZ

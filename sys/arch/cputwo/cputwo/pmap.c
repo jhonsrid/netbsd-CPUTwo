@@ -325,6 +325,51 @@ pmap_virtual_space(vaddr_t *vstartp, vaddr_t *vendp)
 	*vendp = VM_MAX_KERNEL_ADDRESS;
 }
 
+/*
+ * pmap_growkernel: grow the kernel virtual address space by creating
+ * L2 page tables for kernel VAs up to 'maxkvaddr'.
+ *
+ * Called from UVM when it needs more kernel VA space.  We pre-allocate
+ * L2 page tables so that pmap_kenter_pa can fill them in later.
+ */
+static vaddr_t pmap_maxgrown = KERNEL_VM_BASE;
+
+vaddr_t
+pmap_growkernel(vaddr_t maxkvaddr)
+{
+	vaddr_t va;
+
+	if (maxkvaddr <= pmap_maxgrown)
+		return pmap_maxgrown;
+
+	/*
+	 * Walk through each 4MB L1 entry from current max to requested max.
+	 * For each, ensure an L2 page table exists.
+	 */
+	for (va = pmap_maxgrown & ~((vaddr_t)0x003FFFFF);
+	     va < maxkvaddr;
+	     va += 0x00400000) {
+		uint32_t l1idx = PX(1, va);
+		pt_entry_t l1e = kernel_l1table[l1idx];
+
+		if (l1e & PTE_V)
+			continue;	/* already has L2 table or superpage */
+
+		/* Allocate L2 page table */
+		struct vm_page *pg;
+		pg = uvm_pagealloc(NULL, 0, NULL,
+		    UVM_PGA_USERESERVE | UVM_PGA_ZERO);
+		if (pg == NULL)
+			panic("pmap_growkernel: out of pages");
+
+		paddr_t l2pa = VM_PAGE_TO_PHYS(pg);
+		kernel_l1table[l1idx] = PA2PTE(l2pa) | PTE_V;
+	}
+
+	pmap_maxgrown = maxkvaddr;
+	return maxkvaddr;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Steal memory (before UVM is fully up)                              */
 /* ------------------------------------------------------------------ */

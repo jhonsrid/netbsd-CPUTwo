@@ -65,7 +65,9 @@ SUBDIR+=	../external/apache2/argon2/lib/libargon2
 SUBDIR+=	../external/apache2/mDNSResponder/lib
 .endif
 
+.if ${MACHINE_CPU:U} != "cputwo"
 SUBDIR+=	../external/bsd/am-utils/lib
+.endif
 
 SUBDIR+=	../external/bsd/flex/lib
 SUBDIR+=	../external/bsd/tre/lib
@@ -259,7 +261,9 @@ SUBDIR+=	.WAIT
 SUBDIR+=	../crypto/external/bsd/openssh/lib # depends on libcrypto, libz,
 						   # libfido2
 SUBDIR+=	../crypto/external/bsd/netpgp/bindings/lua  # depends on netpgp/lib
+.if ${MACHINE_CPU:U} != "cputwo"
 SUBDIR+=	../external/mpl/bind/lib	# depends on heimdal, libcrypto
+.endif
 						# libuv
 .if ${MKUNBOUND} != "no"
 SUBDIR+=	../external/bsd/unbound/lib	# depends on libcrypto

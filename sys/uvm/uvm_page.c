@@ -691,7 +691,6 @@ uvm_phys_to_vm_page(paddr_t pa)
 paddr_t
 uvm_vm_page_to_phys(const struct vm_page *pg)
 {
-
 	return pg->phys_addr & ~(PAGE_SIZE - 1);
 }
 
