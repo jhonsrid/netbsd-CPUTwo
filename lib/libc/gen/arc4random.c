@@ -65,7 +65,19 @@ __RCSID("$NetBSD: arc4random.c,v 1.33.2.1 2024/10/09 13:25:10 martin Exp $");
 
 #include <assert.h>
 #include <sha2.h>
+#ifndef __CPUTWO_NO_ATOMICS__
 #include <stdatomic.h>
+#else
+/* CPUTwo: single-core, no atomic support in backend.
+ * Use plain types and operations instead. */
+#define atomic_int		int
+#define atomic_bool		bool
+#define atomic_load_explicit(p, o)	(*(p))
+#define atomic_store_explicit(p, v, o)	(*(p) = (v))
+#define memory_order_acquire	0
+#define memory_order_release	0
+#define memory_order_relaxed	0
+#endif
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>

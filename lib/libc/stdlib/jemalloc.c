@@ -295,6 +295,12 @@ __RCSID("$NetBSD: jemalloc.c,v 1.55.2.1 2023/12/18 14:05:23 martin Exp $");
 #  define SIZEOF_PTR_2POW	2
 #  define USE_BRK
 #endif
+#ifdef __cputwo__
+#  define QUANTUM_2POW_MIN	3
+#  define SIZEOF_PTR_2POW	2
+#  define USE_BRK
+#  define NO_TLS
+#endif
 
 #define	SIZEOF_PTR		(1 << SIZEOF_PTR_2POW)
 

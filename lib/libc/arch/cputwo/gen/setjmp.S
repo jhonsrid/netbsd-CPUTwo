@@ -40,8 +40,8 @@
 ENTRY(__setjmp14)
 	/* Allocate stack frame to save lr and r4 across sigprocmask call */
 	subi	sp, sp, 8
-	sw	lr,  [sp, #4]
-	sw	r4,  [sp, #0]
+	sw	lr,  [sp + 4]
+	sw	r4,  [sp + 0]
 
 	mov	r4, r0			/* r4 = jmpbuf pointer */
 
@@ -59,30 +59,30 @@ ENTRY(__setjmp14)
 
 	/* Store magic number */
 	movi	r12, _JB_MAGIC_CPUTWO_SETJMP
-	sw	r12, [r0, #(_JB_MAGIC * 4)]
+	sw	r12, [r0 + (_JB_MAGIC * 4)]
 
 	/* Save callee-saved registers into jmpbuf.
 	 * We need to save the ORIGINAL lr and sp (before our frame). */
-	lw	r12, [sp, #4]		/* original lr */
-	sw	r12, [r0, #(_JB_LR * 4)]
+	lw	r12, [sp + 4]		/* original lr */
+	sw	r12, [r0 + (_JB_LR * 4)]
 	addi	r12, sp, 8		/* original sp */
-	sw	r12, [r0, #(_JB_SP * 4)]
+	sw	r12, [r0 + (_JB_SP * 4)]
 
 	/* Save original r4 (before we clobbered it with jmpbuf pointer) */
-	lw	r12, [sp, #0]
-	sw	r12, [r0, #(_JB_R4 * 4)]
+	lw	r12, [sp + 0]
+	sw	r12, [r0 + (_JB_R4 * 4)]
 
-	sw	r5,  [r0, #(_JB_R5 * 4)]
-	sw	r6,  [r0, #(_JB_R6 * 4)]
-	sw	r7,  [r0, #(_JB_R7 * 4)]
-	sw	r8,  [r0, #(_JB_R8 * 4)]
-	sw	r9,  [r0, #(_JB_R9 * 4)]
-	sw	r10, [r0, #(_JB_R10 * 4)]
-	sw	r11, [r0, #(_JB_R11 * 4)]
+	sw	r5,  [r0 + (_JB_R5 * 4)]
+	sw	r6,  [r0 + (_JB_R6 * 4)]
+	sw	r7,  [r0 + (_JB_R7 * 4)]
+	sw	r8,  [r0 + (_JB_R8 * 4)]
+	sw	r9,  [r0 + (_JB_R9 * 4)]
+	sw	r10, [r0 + (_JB_R10 * 4)]
+	sw	r11, [r0 + (_JB_R11 * 4)]
 
 	/* Restore our frame and return 0 */
-	lw	r4,  [sp, #0]
-	lw	lr,  [sp, #4]
+	lw	r4,  [sp + 0]
+	lw	lr,  [sp + 4]
 	addi	sp, sp, 8
 
 	movi	r0, 0
@@ -100,14 +100,14 @@ ENTRY(__longjmp14)
 	 * the sigprocmask syscall.  Use r4=jmpbuf, r5=val.
 	 */
 	subi	sp, sp, 8
-	sw	lr,  [sp, #4]
-	sw	r4,  [sp, #0]
+	sw	lr,  [sp + 4]
+	sw	r4,  [sp + 0]
 
 	mov	r4, r0			/* r4 = jmpbuf */
 	mov	r5, r1			/* r5 = val */
 
 	/* Verify magic */
-	lw	r12, [r4, #(_JB_MAGIC * 4)]
+	lw	r12, [r4 + (_JB_MAGIC * 4)]
 	movi	r3, _JB_MAGIC_CPUTWO_SETJMP
 	cmp	r12, r3
 	bne	.Lbotch14
@@ -134,20 +134,20 @@ ENTRY(__longjmp14)
 	/* r0 = return value, r4 = jmpbuf.  Now restore all regs from jmpbuf.
 	 * Use r12 as scratch. Do sp and lr last. */
 	mov	r12, r4			/* r12 = jmpbuf (r4 about to be restored) */
-	lw	r4,  [r12, #(_JB_R4 * 4)]
-	lw	r5,  [r12, #(_JB_R5 * 4)]
-	lw	r6,  [r12, #(_JB_R6 * 4)]
-	lw	r7,  [r12, #(_JB_R7 * 4)]
-	lw	r8,  [r12, #(_JB_R8 * 4)]
-	lw	r9,  [r12, #(_JB_R9 * 4)]
-	lw	r10, [r12, #(_JB_R10 * 4)]
-	lw	r11, [r12, #(_JB_R11 * 4)]
-	lw	sp,  [r12, #(_JB_SP * 4)]
-	lw	lr,  [r12, #(_JB_LR * 4)]
+	lw	r4,  [r12 + (_JB_R4 * 4)]
+	lw	r5,  [r12 + (_JB_R5 * 4)]
+	lw	r6,  [r12 + (_JB_R6 * 4)]
+	lw	r7,  [r12 + (_JB_R7 * 4)]
+	lw	r8,  [r12 + (_JB_R8 * 4)]
+	lw	r9,  [r12 + (_JB_R9 * 4)]
+	lw	r10, [r12 + (_JB_R10 * 4)]
+	lw	r11, [r12 + (_JB_R11 * 4)]
+	lw	sp,  [r12 + (_JB_SP * 4)]
+	lw	lr,  [r12 + (_JB_LR * 4)]
 
 	mov	pc, lr
 
 .Lbotch14:
-	b	_C_LABEL(longjmperror)
+	ba	_C_LABEL(longjmperror)
 	/* NOTREACHED */
 END(__longjmp14)

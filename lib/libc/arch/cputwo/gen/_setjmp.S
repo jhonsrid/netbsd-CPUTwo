@@ -48,19 +48,19 @@
 ENTRY(_setjmp)
 	/* Store magic number */
 	movi	r12, _JB_MAGIC_CPUTWO__SETJMP
-	sw	r12, [r0, #(_JB_MAGIC * 4)]
+	sw	r12, [r0 + (_JB_MAGIC * 4)]
 
 	/* Save callee-saved registers */
-	sw	sp,  [r0, #(_JB_SP * 4)]
-	sw	lr,  [r0, #(_JB_LR * 4)]
-	sw	r4,  [r0, #(_JB_R4 * 4)]
-	sw	r5,  [r0, #(_JB_R5 * 4)]
-	sw	r6,  [r0, #(_JB_R6 * 4)]
-	sw	r7,  [r0, #(_JB_R7 * 4)]
-	sw	r8,  [r0, #(_JB_R8 * 4)]
-	sw	r9,  [r0, #(_JB_R9 * 4)]
-	sw	r10, [r0, #(_JB_R10 * 4)]
-	sw	r11, [r0, #(_JB_R11 * 4)]
+	sw	sp,  [r0 + (_JB_SP * 4)]
+	sw	lr,  [r0 + (_JB_LR * 4)]
+	sw	r4,  [r0 + (_JB_R4 * 4)]
+	sw	r5,  [r0 + (_JB_R5 * 4)]
+	sw	r6,  [r0 + (_JB_R6 * 4)]
+	sw	r7,  [r0 + (_JB_R7 * 4)]
+	sw	r8,  [r0 + (_JB_R8 * 4)]
+	sw	r9,  [r0 + (_JB_R9 * 4)]
+	sw	r10, [r0 + (_JB_R10 * 4)]
+	sw	r11, [r0 + (_JB_R11 * 4)]
 
 	/* Return 0 */
 	movi	r0, 0
@@ -69,22 +69,22 @@ END(_setjmp)
 
 ENTRY(_longjmp)
 	/* Verify magic number */
-	lw	r12, [r0, #(_JB_MAGIC * 4)]
+	lw	r12, [r0 + (_JB_MAGIC * 4)]
 	movi	r3, _JB_MAGIC_CPUTWO__SETJMP
 	cmp	r12, r3
 	bne	.Lbotch
 
 	/* Restore callee-saved registers */
-	lw	r4,  [r0, #(_JB_R4 * 4)]
-	lw	r5,  [r0, #(_JB_R5 * 4)]
-	lw	r6,  [r0, #(_JB_R6 * 4)]
-	lw	r7,  [r0, #(_JB_R7 * 4)]
-	lw	r8,  [r0, #(_JB_R8 * 4)]
-	lw	r9,  [r0, #(_JB_R9 * 4)]
-	lw	r10, [r0, #(_JB_R10 * 4)]
-	lw	r11, [r0, #(_JB_R11 * 4)]
-	lw	sp,  [r0, #(_JB_SP * 4)]
-	lw	lr,  [r0, #(_JB_LR * 4)]
+	lw	r4,  [r0 + (_JB_R4 * 4)]
+	lw	r5,  [r0 + (_JB_R5 * 4)]
+	lw	r6,  [r0 + (_JB_R6 * 4)]
+	lw	r7,  [r0 + (_JB_R7 * 4)]
+	lw	r8,  [r0 + (_JB_R8 * 4)]
+	lw	r9,  [r0 + (_JB_R9 * 4)]
+	lw	r10, [r0 + (_JB_R10 * 4)]
+	lw	r11, [r0 + (_JB_R11 * 4)]
+	lw	sp,  [r0 + (_JB_SP * 4)]
+	lw	lr,  [r0 + (_JB_LR * 4)]
 
 	/* Return value: if v == 0, return 1 */
 	mov	r0, r1
@@ -95,6 +95,6 @@ ENTRY(_longjmp)
 	mov	pc, lr
 
 .Lbotch:
-	b	_C_LABEL(longjmperror)
+	ba	_C_LABEL(longjmperror)
 	/* NOTREACHED */
 END(_longjmp)

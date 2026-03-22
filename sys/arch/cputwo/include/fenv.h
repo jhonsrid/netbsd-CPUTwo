@@ -8,6 +8,8 @@
 #ifndef _CPUTWO_FENV_H_
 #define _CPUTWO_FENV_H_
 
+#include <sys/cdefs.h>
+
 typedef int fenv_t;
 typedef int fexcept_t;
 

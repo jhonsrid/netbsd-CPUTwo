@@ -44,5 +44,5 @@ ENTRY(_pipe)
 	movi	r0, 0
 	mov	pc, lr
 1:
-	b	_C_LABEL(__cerror)
+	ba	_C_LABEL(__cerror)
 END(_pipe)

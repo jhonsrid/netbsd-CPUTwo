@@ -40,5 +40,7 @@ ENTRY(__start)
 	 * ___start(cleanup, ps_strings) */
 	mov	r1, r2		/* r1 = ps_strings */
 	/* r0 = cleanup (already in r0) */
-	b	_C_LABEL(___start)
+	movi	r12, %lo(___start)
+	movhi	r12, %hi(___start)
+	mov	pc, r12
 END(__start)

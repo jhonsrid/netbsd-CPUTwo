@@ -38,15 +38,15 @@
  */
 ENTRY(__sigsetjmp14)
 	/* Store savemask flag at env[_JBLEN] */
-	sw	r1, [r0, #(_JBLEN * 4)]
+	sw	r1, [r0 + (_JBLEN * 4)]
 
 	cmpi	r1, 0
 	bne	1f
 	/* savemask == 0: tail-call _setjmp */
-	b	_C_LABEL(_setjmp)
+	ba	_C_LABEL(_setjmp)
 1:
 	/* savemask != 0: tail-call __setjmp14 */
-	b	_C_LABEL(__setjmp14)
+	ba	_C_LABEL(__setjmp14)
 END(__sigsetjmp14)
 
 /*
@@ -55,12 +55,12 @@ END(__sigsetjmp14)
  * Check the saved "savemask" flag and tail-call the appropriate longjmp.
  */
 ENTRY(__siglongjmp14)
-	lw	r12, [r0, #(_JBLEN * 4)]
+	lw	r12, [r0 + (_JBLEN * 4)]
 	cmpi	r12, 0
 	bne	1f
 	/* savemask == 0: tail-call _longjmp */
-	b	_C_LABEL(_longjmp)
+	ba	_C_LABEL(_longjmp)
 1:
 	/* savemask != 0: tail-call __longjmp14 */
-	b	_C_LABEL(__longjmp14)
+	ba	_C_LABEL(__longjmp14)
 END(__siglongjmp14)

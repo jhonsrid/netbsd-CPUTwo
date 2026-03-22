@@ -18,6 +18,11 @@ SRCS+=	_env.c _rand48.c \
 	strtoumax.c strtouq.c system.c tdelete.c tfind.c tsearch.c twalk.c \
 	unsetenv.c strfmon.c
 
+# CPUTwo: backend does not support TLS (__thread); make it a plain static.
+.if ${MACHINE_CPU:U} == "cputwo"
+CPPFLAGS.cxa_thread_atexit.c+=	-D__thread=
+.endif
+
 # These are often replaced by MD .S versions
 SRCS+=	abs.c labs.c llabs.c imaxabs.c
 SRCS+=	div.c ldiv.c imaxdiv.c

@@ -29,9 +29,9 @@
 ENTRY(swapcontext)
 	/* Save lr and second argument (ucp) across getcontext call */
 	subi	sp, sp, 12
-	sw	lr,  [sp, #8]
-	sw	r4,  [sp, #4]
-	sw	r5,  [sp, #0]
+	sw	lr,  [sp + 8]
+	sw	r4,  [sp + 4]
+	sw	r5,  [sp + 0]
 
 	mov	r4, r0			/* r4 = oucp */
 	mov	r5, r1			/* r5 = ucp */
@@ -56,17 +56,17 @@ ENTRY(swapcontext)
 
 .Lerr:
 	mov	r0, r1			/* errno */
-	lw	r4,  [sp, #4]
-	lw	r5,  [sp, #0]
-	lw	lr,  [sp, #8]
+	lw	r4,  [sp + 4]
+	lw	r5,  [sp + 0]
+	lw	lr,  [sp + 8]
 	addi	sp, sp, 12
-	b	_C_LABEL(__cerror)
+	ba	_C_LABEL(__cerror)
 
 .Lreturn:
 	/* Resumed via setcontext — return 0 */
-	lw	r4,  [sp, #4]
-	lw	r5,  [sp, #0]
-	lw	lr,  [sp, #8]
+	lw	r4,  [sp + 4]
+	lw	r5,  [sp + 0]
+	lw	lr,  [sp + 8]
 	addi	sp, sp, 12
 	movi	r0, 0
 	mov	pc, lr

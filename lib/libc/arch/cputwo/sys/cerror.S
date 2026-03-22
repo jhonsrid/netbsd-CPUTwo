@@ -33,15 +33,15 @@
 ENTRY(__cerror)
 	/* Save lr and errno across __errno() call */
 	subi	sp, sp, 8
-	sw	lr,  [sp, #4]
-	sw	r0,  [sp, #0]		/* save errno value */
+	sw	lr,  [sp + 4]
+	sw	r0,  [sp + 0]		/* save errno value */
 
-	bl	_C_LABEL(__errno)	/* r0 = &errno */
+	jmp	lr, _C_LABEL(__errno)	/* r0 = &errno */
 
-	lw	r12, [sp, #0]		/* recover errno value */
-	sw	r12, [r0, #0]		/* *__errno() = errno value */
+	lw	r12, [sp + 0]		/* recover errno value */
+	sw	r12, [r0 + 0]		/* *__errno() = errno value */
 
-	lw	lr,  [sp, #4]
+	lw	lr,  [sp + 4]
 	addi	sp, sp, 8
 
 	movi	r0, -1			/* return -1 */
@@ -51,7 +51,9 @@ END(__cerror)
 #else
 	.globl	_C_LABEL(errno)
 ENTRY(__cerror)
-	sw	r0, _C_LABEL(errno)
+	movi	r12, %lo(_C_LABEL(errno))
+	movhi	r12, %hi(_C_LABEL(errno))
+	sw	r0, [r12]
 	movi	r0, -1
 	movi	r1, -1
 	mov	pc, lr

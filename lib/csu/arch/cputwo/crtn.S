@@ -27,11 +27,11 @@
 #include <machine/asm.h>
 
 	.section ".init", "ax", @progbits
-	lw	lr, [sp, #0]
+	lw	lr, [sp + 0]
 	addi	sp, sp, 4
 	mov	pc, lr
 
 	.section ".fini", "ax", @progbits
-	lw	lr, [sp, #0]
+	lw	lr, [sp + 0]
 	addi	sp, sp, 4
 	mov	pc, lr

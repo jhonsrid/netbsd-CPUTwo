@@ -19,8 +19,8 @@ WEAK_ALIAS(getcontext, _getcontext)
 ENTRY(_getcontext)
 	/* Save ucp pointer and lr across syscall */
 	subi	sp, sp, 8
-	sw	lr,  [sp, #4]
-	sw	r4,  [sp, #0]
+	sw	lr,  [sp + 4]
+	sw	r4,  [sp + 0]
 	mov	r4, r0			/* r4 = ucp */
 
 	/* Kernel ABI: r0=sysnum, r1=ucp */
@@ -33,19 +33,19 @@ ENTRY(_getcontext)
 
 	/* Patch saved context so restoring it returns 0 from getcontext */
 	movi	r12, 0
-	sw	r12, [r4, #_UC_GREGS_R0]	/* return value = 0 */
-	lw	r12, [sp, #4]			/* original lr */
-	sw	r12, [r4, #_UC_GREGS_PC]	/* resume at caller */
+	sw	r12, [r4 + _UC_GREGS_R0]	/* return value = 0 */
+	lw	r12, [sp + 4]			/* original lr */
+	sw	r12, [r4 + _UC_GREGS_PC]	/* resume at caller */
 
 	movi	r0, 0
-	lw	r4,  [sp, #0]
-	lw	lr,  [sp, #4]
+	lw	r4,  [sp + 0]
+	lw	lr,  [sp + 4]
 	addi	sp, sp, 8
 	mov	pc, lr
 
 1:
-	lw	r4,  [sp, #0]
-	lw	lr,  [sp, #4]
+	lw	r4,  [sp + 0]
+	lw	lr,  [sp + 4]
 	addi	sp, sp, 8
-	b	_C_LABEL(__cerror)
+	ba	_C_LABEL(__cerror)
 END(_getcontext)

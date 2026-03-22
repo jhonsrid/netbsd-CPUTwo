@@ -47,8 +47,8 @@ ENTRY(__clone)
 	 * can retrieve them after the syscall.
 	 */
 	subi	r1, r1, 8		/* make room on child stack */
-	sw	r0, [r1, #0]		/* child_stack[0] = fn */
-	sw	r3, [r1, #4]		/* child_stack[4] = arg */
+	sw	r0, [r1 + 0]		/* child_stack[0] = fn */
+	sw	r3, [r1 + 4]		/* child_stack[4] = arg */
 
 	/*
 	 * Syscall: __clone(flags, stack)
@@ -68,12 +68,11 @@ ENTRY(__clone)
 	bne	.Lparent
 
 	/* Child: sp is the new stack.  Fetch fn and arg. */
-	lw	r12, [sp, #0]		/* r12 = fn */
-	lw	r0,  [sp, #4]		/* r0 = arg */
+	lw	r12, [sp + 0]		/* r12 = fn */
+	lw	r0,  [sp + 4]		/* r0 = arg */
 
 	/* Call fn(arg) */
-	mov	lr, pc
-	mov	pc, r12
+	callr	lr, r12
 
 	/* fn returned: call _exit(retval) */
 	mov	r1, r0			/* r1 = exit status (kernel arg0) */
@@ -88,5 +87,5 @@ ENTRY(__clone)
 	movi	r0, EINVAL
 	/* fall through to __cerror */
 .Lerr:
-	b	_C_LABEL(__cerror)
+	ba	_C_LABEL(__cerror)
 END(__clone)

@@ -74,7 +74,7 @@
 	 * One instruction slot before the trampoline entry point,
 	 * because the unwinder looks at (return PC - 1 insn).
 	 */
-	nop
+	mov	r0, r0		/* nop: padding for unwinder */
 
 ENTRY_NP(__sigtramp_siginfo_2)
 	/* Compute pointer to ucontext: sp + sizeof(siginfo_t) */

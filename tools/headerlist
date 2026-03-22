@@ -143,3 +143,7 @@
 ./x68k/include/elf_machdep.h
 ./zaurus/include/disklabel.h
 ./zaurus/include/elf_machdep.h
+./cputwo/include/disklabel.h
+./cputwo/include/elf_machdep.h
+./evbcputwo/include/disklabel.h
+./evbcputwo/include/elf_machdep.h

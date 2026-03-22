@@ -2,3 +2,4 @@
 
 .PATH: ${COMPATDIR}/time
 SRCS+= compat_localtime.c compat_difftime.c
+COPTS.compat_localtime.c+=	-Wno-unterminated-string-initialization

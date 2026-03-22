@@ -45,6 +45,8 @@ __KERNEL_RCSID(0, "$NetBSD$");
 #include <sys/systm.h>
 #include <sys/device.h>
 #include <sys/buf.h>
+#include <sys/bufq.h>
+#include <sys/disk.h>
 #include <sys/bus.h>
 
 #include <dev/ldvar.h>
@@ -262,4 +264,17 @@ cputwo_blk_dump(struct ld_softc *ld, void *va, int blkno, int nblk)
 			return EIO;
 	}
 	return 0;
+}
+
+/*
+ * Block device interrupt handler — called from trap.c.
+ * I/O is synchronous so nothing to do, but the symbol must exist.
+ */
+void cputwo_blk_intr(void);
+
+void
+cputwo_blk_intr(void)
+{
+
+	/* Synchronous operation — nothing to do */
 }

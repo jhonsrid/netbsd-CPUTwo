@@ -219,7 +219,7 @@ USE_SSP?=	yes
 # What version of jemalloc we use (100 is the one
 # built-in to libc from 2005 (pre version 3).
 #
-.if ${MACHINE_ARCH} == "vax" || ${MACHINE} == "sun2"
+.if ${MACHINE_ARCH} == "vax" || ${MACHINE} == "sun2" || ${MACHINE_CPU:U} == "cputwo"
 HAVE_JEMALLOC?=		100
 .else
 HAVE_JEMALLOC?=		510

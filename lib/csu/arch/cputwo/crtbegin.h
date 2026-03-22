@@ -20,27 +20,18 @@
  */
 
 /*
- * .init and .fini section prologues.
- * crti.S provides the opening of _init and _fini functions.
- * crtn.S provides the closing (epilogue).
+ * Emit calls to __do_global_ctors_aux and __do_global_dtors_aux
+ * in the .init and .fini sections respectively.
+ *
+ * CPUTwo call instruction: JMP lr, target
  */
 
-#include <machine/asm.h>
+__asm(	"\n\t"
+	".pushsection .init, \"ax\", @progbits"		"\n\t"
+	"jmp	lr, __do_global_ctors_aux"		"\n\t"
+	".popsection");
 
-#include "sysident.S"
-
-	.section ".init", "ax", @progbits
-	.p2align 2
-	.globl	_init
-	.type	_init, _ASM_TYPE_FUNCTION
-_init:
-	subi	sp, sp, 4
-	sw	lr, [sp + 0]
-
-	.section ".fini", "ax", @progbits
-	.p2align 2
-	.globl	_fini
-	.type	_fini, _ASM_TYPE_FUNCTION
-_fini:
-	subi	sp, sp, 4
-	sw	lr, [sp + 0]
+__asm(	"\n\t"
+	".pushsection .fini, \"ax\", @progbits"		"\n\t"
+	"jmp	lr, __do_global_dtors_aux"		"\n\t"
+	".popsection");

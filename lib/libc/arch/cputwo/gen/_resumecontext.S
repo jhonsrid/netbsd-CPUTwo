@@ -45,7 +45,7 @@ ENTRY(_resumecontext)
 	syscall
 
 	/* Load uc_link */
-	lw	r0, [sp, #_UC_LINK]
+	lw	r0, [sp + _UC_LINK]
 	cmpi	r0, 0
 	beq	1f
 

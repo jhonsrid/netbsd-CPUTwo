@@ -23,11 +23,13 @@ _C_LABEL(__curbrk):
 ENTRY(_sbrk)
 	/* r0 = incr */
 	subi	sp, sp, 12
-	sw	lr,  [sp, #8]
-	sw	r4,  [sp, #4]
-	sw	r5,  [sp, #0]
+	sw	lr,  [sp + 8]
+	sw	r4,  [sp + 4]
+	sw	r5,  [sp + 0]
 
-	lw	r4, _C_LABEL(__curbrk)	/* r4 = old curbrk */
+	movi	r12, %lo(_C_LABEL(__curbrk))
+	movhi	r12, %hi(_C_LABEL(__curbrk))
+	lw	r4, [r12]		/* r4 = old curbrk */
 	add	r5, r0, r4		/* r5 = new break = curbrk + incr */
 
 	/* break(new_break): kernel arg0 = r5 -> r1 */
@@ -39,19 +41,21 @@ ENTRY(_sbrk)
 	bne	1f
 
 	/* Success: update __curbrk, return old break */
-	sw	r5, _C_LABEL(__curbrk)
+	movi	r12, %lo(_C_LABEL(__curbrk))
+	movhi	r12, %hi(_C_LABEL(__curbrk))
+	sw	r5, [r12]
 	mov	r0, r4			/* return old break */
 
-	lw	r5,  [sp, #0]
-	lw	r4,  [sp, #4]
-	lw	lr,  [sp, #8]
+	lw	r5,  [sp + 0]
+	lw	r4,  [sp + 4]
+	lw	lr,  [sp + 8]
 	addi	sp, sp, 12
 	mov	pc, lr
 
 1:	/* Error */
-	lw	r5,  [sp, #0]
-	lw	r4,  [sp, #4]
-	lw	lr,  [sp, #8]
+	lw	r5,  [sp + 0]
+	lw	r4,  [sp + 4]
+	lw	lr,  [sp + 8]
 	addi	sp, sp, 12
-	b	_C_LABEL(__cerror)
+	ba	_C_LABEL(__cerror)
 END(_sbrk)

@@ -31,5 +31,5 @@ ENTRY(__fork)
 	bne	1f			/* error */
 	mov	pc, lr			/* return r0 = pid */
 1:
-	b	_C_LABEL(__cerror)
+	ba	_C_LABEL(__cerror)
 END(__fork)

@@ -160,6 +160,14 @@ LIBCSANITIZERFLAGS=	# empty
 
 CWARNFLAGS+=	${CWARNFLAGS.${ACTIVE_CC}}
 
+# CPUTwo: suppress warnings from newer clang that NetBSD source hasn't adapted to
+.if ${MACHINE_CPU:U} == "cputwo"
+CWARNFLAGS+=	-Wno-error=unterminated-string-initialization
+CWARNFLAGS+=	-Wno-error=atomic-alignment
+CWARNFLAGS+=	-Wno-error=cast-function-type-mismatch
+CWARNFLAGS+=	-Wno-error=null-pointer-subtraction
+.endif
+
 CPPFLAGS+=	${AUDIT:D-D__AUDIT__}
 _NOWERROR=	${defined(NOGCCERROR) || (${ACTIVE_CC} == "clang" && defined(NOCLANGERROR)):?yes:no}
 CFLAGS+=	${${_NOWERROR} == "no" :?-Werror:} ${CWARNFLAGS}

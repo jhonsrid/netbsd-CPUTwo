@@ -54,6 +54,13 @@ typedef __va_list va_list;
 #define __VA_LIST_DECLARED
 #endif
 
+/*
+ * If the compiler's <stdarg.h> was already included (clang defines
+ * __STDARG_H), these macros are already available — skip to avoid
+ * -Wmacro-redefined errors when the kernel sys/ tree is on the
+ * include path during userland builds.
+ */
+#ifndef __STDARG_H
 #define	va_start(ap, last)	__builtin_va_start((ap), (last))
 #define	va_arg			__builtin_va_arg
 #define	va_end(ap)		__builtin_va_end(ap)
@@ -64,5 +71,6 @@ typedef __va_list va_list;
      defined(_NETBSD_SOURCE))
 #define	va_copy(dest, src)	__va_copy((dest), (src))
 #endif
+#endif /* !__STDARG_H */
 
 #endif /* !_SYS_STDARG_H_ */

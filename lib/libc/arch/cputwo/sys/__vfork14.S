@@ -15,5 +15,5 @@ ENTRY(__vfork14)
 	bne	1f
 	mov	pc, lr
 1:
-	b	_C_LABEL(__cerror)
+	ba	_C_LABEL(__cerror)
 END(__vfork14)

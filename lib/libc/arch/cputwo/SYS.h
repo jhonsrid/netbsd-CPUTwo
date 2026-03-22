@@ -105,7 +105,7 @@ ENTRY(x);								\
 	bne	.L ## x ## _err;					\
 	mov	pc, lr;		/* return r0 */				\
 .L ## x ## _err:							\
-	b	_C_LABEL(__cerror);					\
+	ba	_C_LABEL(__cerror);					\
 END(x)
 
 #define PSEUDO_NOERROR(x,y)						\

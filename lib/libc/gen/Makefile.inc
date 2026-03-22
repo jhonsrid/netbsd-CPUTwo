@@ -41,6 +41,11 @@ SRCS+=	alarm.c alphasort.c arc4random.c assert.c asysctl.c \
 
 LINTFLAGS.arc4random.c+=-Ac11	# stdatomic.h
 LINTFLAGS.arc4random.c+=-X 129	# expression has null effect (in atomic macros)
+# CPUTwo: single-core, backend does not support atomic operations.
+# Stub out atomic builtins to plain load/store (safe: single-core).
+.if ${MACHINE_CPU:U} == "cputwo"
+CPPFLAGS.arc4random.c+=	-D__CPUTWO_NO_ATOMICS__
+.endif
 
 # uses alloca
 COPTS.execvp.c = -Wno-stack-protector

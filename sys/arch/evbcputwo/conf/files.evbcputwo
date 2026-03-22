@@ -31,5 +31,8 @@ file	arch/evbcputwo/evbcputwo/cputwo_uart.c
 attach	ld at mainbus with ld_mainbus
 file	arch/evbcputwo/evbcputwo/cputwo_blk.c		ld_mainbus
 
+# Disklabel support (MBR)
+file	kern/subr_disk_mbr.c			disk
+
 # Memory Disk (for ramdisk root)
 file	dev/md_root.c				memory_disk_hooks
