@@ -10,7 +10,7 @@ maxusers	32
 # Standard system options
 options		DDB			# in-kernel debugger
 #options	DDB_HISTORY_SIZE=512	# enable history editing
-options		DIAGNOSTIC		# internal consistency checks
+#options	DIAGNOSTIC		# internal consistency checks
 #options	DEBUG			# expensive debugging checks/support
 
 # File systems

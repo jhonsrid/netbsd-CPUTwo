@@ -16,4 +16,5 @@ file	arch/cputwo/cputwo/copy.c
 file	arch/cputwo/cputwo/sig_machdep.c
 file	arch/cputwo/cputwo/bus_space.c
 file	arch/cputwo/cputwo/atomic.c
+file	arch/cputwo/cputwo/lock_stubs.c
 file	arch/cputwo/cputwo/stubs.c

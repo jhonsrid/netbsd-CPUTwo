@@ -14,10 +14,17 @@
 #define cpu_hascounter()	(curcpu()->ci_data.cpu_cc_freq != 0)
 #define cpu_counter()		cpu_counter32()
 
+/*
+ * Read the timer's remaining count as a cycle counter.
+ * The timer counts down from PERIOD, so we invert to get an
+ * upward-counting value.  Before the timer is started, reads 0.
+ */
+#define CPUTWO_TIMER_COUNT	(*(volatile uint32_t *)0x03F01000)
+
 static __inline uint32_t
 cpu_counter32(void)
 {
-	return 0; /* XXX no hardware counter yet */
+	return 0xFFFFFFFFu - CPUTWO_TIMER_COUNT;
 }
 
 static __inline uint64_t

@@ -170,14 +170,15 @@ trap(struct trapframe *tf)
 			ftype = VM_PROT_READ;
 
 		struct proc *p = curproc;
-		struct pmap *pmap;
+		struct vm_map *map;
 
-		if (user && p != NULL)
-			pmap = p->p_vmspace->vm_map.pmap;
-		else
-			pmap = pmap_kernel();
+		if (va >= VM_MIN_KERNEL_ADDRESS || !user) {
+			map = kernel_map;
+		} else {
+			map = &p->p_vmspace->vm_map;
+		}
 
-		rv = uvm_fault(&p->p_vmspace->vm_map, trunc_page(va), ftype);
+		rv = uvm_fault(map, trunc_page(va), ftype);
 		if (rv == 0)
 			return;
 

@@ -123,11 +123,32 @@ cputwo_init(void)
 	}
 
 	/*
+	 * Step 2b: Start the timer as a free-running counter (no IRQ).
+	 * This provides cpu_counter32() for early timestamps.
+	 * cpu_initclocks() will reconfigure it later with IRQ enabled.
+	 */
+	{
+#define TIMER_PERIOD_REG (*(volatile uint32_t *)0x03F01000)
+#define TIMER_CTRL_REG   (*(volatile uint32_t *)0x03F01004)
+		TIMER_PERIOD_REG = 0xFFFFFFFF;	/* max period */
+		TIMER_CTRL_REG = 0x01;		/* enable, no IRQ */
+		/* Set cpu_cc_freq so cpu_hascounter() returns true.
+		 * The timer decrements once per instruction; approximate
+		 * as 10 MHz for timestamp purposes. */
+		cpu_info_store.ci_data.cpu_cc_freq = 10000000;
+	}
+
+	/*
 	 * Step 3: Early console for printf/panic.
 	 */
 	consinit();
 
-	printf("CPUTwo NetBSD bootstrap\n");
+	/* Test initialized data integrity */
+	{
+		extern int *vmem_debug_bt_count_ptr;
+		printf("CPUTwo NetBSD bootstrap\n");
+		printf("  static_bt_count@%p = %d\n", vmem_debug_bt_count_ptr, *vmem_debug_bt_count_ptr);
+	}
 
 	/*
 	 * Step 4: Compute physical memory layout.
@@ -156,7 +177,11 @@ cputwo_init(void)
 	 */
 	pmap_bootstrap();
 
-	printf("pmap_bootstrap done\n");
+	{
+		extern int *vmem_debug_bt_count_ptr;
+		printf("pmap_bootstrap done\n");
+		printf("  static_bt_count@%p = %d\n", vmem_debug_bt_count_ptr, *vmem_debug_bt_count_ptr);
+	}
 
 	/*
 	 * Step 6: Register remaining free physical memory with UVM.

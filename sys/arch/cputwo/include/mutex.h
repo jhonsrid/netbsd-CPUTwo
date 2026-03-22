@@ -33,7 +33,7 @@
 
 struct kmutex {
 	uintptr_t	mtx_pad1;
-	uintptr_t	mtx_pad2;
+	uintptr_t	mtx_pad2[2];
 };
 
 #else	/* __MUTEX_PRIVATE */
@@ -60,6 +60,7 @@ struct kmutex {
 #define	mtx_lock		u.s.mtxs_lock
 
 #define	__HAVE_SIMPLE_MUTEXES		1
+#define	__HAVE_MUTEX_STUBS		1
 
 #endif	/* __MUTEX_PRIVATE */
 

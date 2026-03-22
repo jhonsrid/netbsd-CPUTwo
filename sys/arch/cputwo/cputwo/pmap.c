@@ -268,6 +268,13 @@ pmap_bootstrap(void)
 	kernel_vm_next = KERNEL_VM_BASE;
 
 	/*
+	 * Tell UVM the current upper bound of mapped kernel VA.
+	 * pmap_growkernel() will extend beyond this as needed.
+	 */
+	extern vaddr_t uvm_maxkaddr;
+	uvm_maxkaddr = KERNEL_VM_BASE;
+
+	/*
 	 * Enable the MMU!
 	 */
 	SREG_SATP = kernel_pmap_store.pm_satp;
@@ -346,6 +353,9 @@ pmap_growkernel(vaddr_t maxkvaddr)
 	 * Walk through each 4MB L1 entry from current max to requested max.
 	 * For each, ensure an L2 page table exists.
 	 */
+	printf("[pmap_growkernel] from %lx to %lx\n",
+	    (unsigned long)(pmap_maxgrown & ~((vaddr_t)0x003FFFFF)),
+	    (unsigned long)maxkvaddr);
 	for (va = pmap_maxgrown & ~((vaddr_t)0x003FFFFF);
 	     va < maxkvaddr;
 	     va += 0x00400000) {
@@ -355,14 +365,25 @@ pmap_growkernel(vaddr_t maxkvaddr)
 		if (l1e & PTE_V)
 			continue;	/* already has L2 table or superpage */
 
+		printf("[pmap_growkernel] va=%lx l1idx=%u page_init_done=%d\n",
+		    (unsigned long)va, l1idx, uvm.page_init_done);
 		/* Allocate L2 page table */
-		struct vm_page *pg;
-		pg = uvm_pagealloc(NULL, 0, NULL,
-		    UVM_PGA_USERESERVE | UVM_PGA_ZERO);
-		if (pg == NULL)
-			panic("pmap_growkernel: out of pages");
-
-		paddr_t l2pa = VM_PAGE_TO_PHYS(pg);
+		paddr_t l2pa;
+		if (false) {  /* always use bootstrap alloc for now */
+			struct vm_page *pg;
+			pg = uvm_pagealloc(NULL, 0, NULL,
+			    UVM_PGA_USERESERVE | UVM_PGA_ZERO);
+			if (pg == NULL)
+				panic("pmap_growkernel: out of pages");
+			l2pa = VM_PAGE_TO_PHYS(pg);
+		} else {
+			/* Before UVM is fully ready, steal from bootstrap pool */
+			printf("[pmap_growkernel] bootstrap_alloc_page...\n");
+			l2pa = bootstrap_alloc_page();
+			printf("[pmap_growkernel] got pa=%lx, zeroing...\n", (unsigned long)l2pa);
+			memset(pa_to_ptr(l2pa), 0, PAGE_SIZE);
+			printf("[pmap_growkernel] zeroed\n");
+		}
 		kernel_l1table[l1idx] = PA2PTE(l2pa) | PTE_V;
 	}
 
